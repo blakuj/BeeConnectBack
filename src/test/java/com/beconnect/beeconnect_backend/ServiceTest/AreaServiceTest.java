@@ -122,5 +122,42 @@ class AreaServiceTest {
         assertThat(dto.getOwnerLastName()).isEqualTo("Doe");
     }
 
+    @Test
+    void getAllAreasReturnsMappedDTOs() {
+        // given
+        Area area1 = Area.builder()
+                .type("MEADOW")
+                .coordinates(List.of("10.0,20.0"))
+                .area(100.0)
+                .description("Open meadow")
+                .maxHives(30)
+                .pricePerDay(12.0)
+                .status("AVAILABLE")
+                .dateAdded(LocalDateTime.now())
+                .build();
+
+        Area area2 = Area.builder()
+                .type("FOREST")
+                .coordinates(List.of("5.0,15.0"))
+                .area(80.0)
+                .description("Shady forest")
+                .maxHives(15)
+                .pricePerDay(8.0)
+                .status("OCCUPIED")
+                .dateAdded(LocalDateTime.now())
+                .build();
+
+
+
+        when(areaRepository.findAll())
+                .thenReturn(Arrays.asList(area1, area2));
+
+        // when
+        List<AreaDTO> result = areaService.getAllAreas();
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(AreaDTO::getType).containsExactly("MEADOW", "FOREST");
+    }
 
 }
