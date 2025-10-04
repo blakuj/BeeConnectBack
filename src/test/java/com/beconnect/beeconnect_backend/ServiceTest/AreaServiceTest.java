@@ -82,6 +82,45 @@ class AreaServiceTest {
                 .hasMessage("User not found");
     }
 
+    @Test
+    void getAreasForUserReturnMappedDTOs() {
+        // given
+        Person person = new Person();
+        person.setLogin("john");
+        person.setFirstname("John");
+        person.setLastname("Doe");
+
+        Area area = Area.builder()
+                .type("FOREST")
+                .coordinates(List.of("1.0,2.0", "3.0,4.0"))
+                .area(50.0)
+                .description("Nice place")
+                .maxHives(20)
+                .pricePerDay(15.0)
+                .status("AVAILABLE")
+                .owner(person)
+                .dateAdded(LocalDateTime.now())
+                .build();
+
+        when(personRepository.findByLogin("john")).thenReturn(Optional.of(person));
+        when(areaRepository.findByOwner(person)).thenReturn(List.of(area));
+
+        // when
+        List<AreaDTO> result = areaService.getAreasForUser("john");
+
+        // then
+        assertThat(result).hasSize(1);
+        AreaDTO dto = result.get(0);
+        assertThat(dto.getType()).isEqualTo("FOREST");
+        assertThat(dto.getCoordinates()).containsExactly(List.of(1.0, 2.0), List.of(3.0, 4.0));
+        assertThat(dto.getArea()).isEqualTo(50.0);
+        assertThat(dto.getDescription()).isEqualTo("Nice place");
+        assertThat(dto.getMaxHives()).isEqualTo(20);
+        assertThat(dto.getPricePerDay()).isEqualTo(15.0);
+        assertThat(dto.getStatus()).isEqualTo("AVAILABLE");
+        assertThat(dto.getOwnerFirstName()).isEqualTo("John");
+        assertThat(dto.getOwnerLastName()).isEqualTo("Doe");
+    }
 
 
 }
