@@ -69,6 +69,19 @@ class AreaServiceTest {
         assertThat(savedArea.getOwner()).isEqualTo(person);
         assertThat(savedArea.getDateAdded()).isNotNull();
     }
+    @Test
+    void addAreaThrowExceptionWhenUserNotFound() {
+        // given
+        when(personRepository.findByLogin("unknown")).thenReturn(Optional.empty());
+
+        AreaDTO dto = new AreaDTO("FIELD", List.of(), 100.0, "desc", 5, 2.5, null, null, null);
+
+        // when / then
+        assertThatThrownBy(() -> areaService.addArea(dto, "unknown"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("User not found");
+    }
+
 
 
 }
