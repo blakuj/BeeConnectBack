@@ -6,13 +6,12 @@ import com.beconnect.beeconnect_backend.Service.AreaService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/areas")
+@RequestMapping("/api")
 public class AreaController {
     @Autowired
     private SessionStore sessionStore;
@@ -51,7 +50,7 @@ public class AreaController {
         return ResponseEntity.ok(areas);
     }
 
-    @GetMapping
+    @GetMapping("/areas")
     public ResponseEntity<List<AreaDTO>> getAllAreas() {
         List<AreaDTO> areas = areaService.getAllAreas();
         return ResponseEntity.ok(areas);
