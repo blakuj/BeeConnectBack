@@ -55,29 +55,7 @@ public class AuthController {
             cookie.setMaxAge(24 * 60 * 60);
             response.addCookie(cookie);
         }
-
-        return success;
     }
-
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@CookieValue(name = "session", required = false) String sessionToken) {
-        if (sessionToken == null) return ResponseEntity.status(401).body("Brak ciasteczka sesji");
-
-        String email = sessionStore.getEmail(sessionToken);
-        if (email == null) return ResponseEntity.status(401).body("Nieprawidłowa sesja");
-
-        return personRepository.findByEmail(email)
-                .map(user -> Map.of(
-                        "firstname", user.getFirstname(),
-                        "lastname", user.getLastname(),
-                        "email", user.getEmail(),
-                        "phone", user.getPhone()
-                ))
-                .map(ResponseEntity::ok)
-                .orElse(null);
-
-    }
-
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@CookieValue(name = "session", required = false) String sessionToken,
