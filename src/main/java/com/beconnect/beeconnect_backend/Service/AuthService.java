@@ -67,9 +67,16 @@ public class AuthService {
         return token;
     }
 
-    public boolean login(LoginDTO request) {
-        return personRepository.findByLogin(request.getLogin())
-                .map(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
-                .orElse(false);
+    private String generateJwtToken(Person user) {
+        return Jwts.builder()
+                .subject(user.getEmail())
+                .claim("firstname", user.getFirstname())
+                .claim("lastname", user.getLastname())
+                .claim("phone", user.getPhone())
+                .claim("email", user.getEmail())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24h
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .compact();
     }
 }
