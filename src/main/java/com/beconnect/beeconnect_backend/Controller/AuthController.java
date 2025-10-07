@@ -1,19 +1,19 @@
 package com.beconnect.beeconnect_backend.Controller;
 
-import com.beconnect.beeconnect_backend.Config.SessionStore;
 import com.beconnect.beeconnect_backend.DTO.LoginDTO;
 import com.beconnect.beeconnect_backend.DTO.RegisterDTO;
+import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import com.beconnect.beeconnect_backend.Service.AuthService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/auth")
