@@ -21,10 +21,12 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PersonRepository personRepository;
 
     public String register(RegisterDTO request) {
         if (personRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("User already exitst");
+            throw new RuntimeException("User already exists");
         }
 
         Person user = Person.builder()
@@ -37,7 +39,32 @@ public class AuthService {
                 .build();
 
         personRepository.save(user);
-        return "User registered successfully";
+        return generateJwtToken(user);
+    }
+
+    public String login(LoginDTO request) {
+        System.out.println("Attempting login with login: " + request.getLogin());
+
+        Person user = personRepository
+                .findByLogin(request.getLogin())
+                .orElseThrow(() -> {
+                    System.out.println("User not found for login: " + request.getLogin());
+                    return new RuntimeException("Invalid credentials");
+                });
+
+        System.out.println("Found user: " + user.getEmail() + ", encoded password: " + user.getPassword());
+        System.out.println("Provided password: " + request.getPassword());
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            System.out.println("Password mismatch for login: " + request.getLogin());
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        System.out.println("Generating JWT for user: " + user.getEmail());
+        String token = generateJwtToken(user);
+        System.out.println("Generated JWT: " + token);
+
+        return token;
     }
 
     public boolean login(LoginDTO request) {
