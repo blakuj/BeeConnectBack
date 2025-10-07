@@ -16,8 +16,8 @@ import java.util.Date;
 @Service
 public class AuthService {
 
-    @Autowired
-    private PersonRepository personRepository;
+    @Value("${jwt.secret}")
+    private String secret;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
