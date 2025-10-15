@@ -17,15 +17,16 @@ public class AreaService {
 
     private final AreaRepository areaRepository;
     private final PersonRepository personRepository;
+    private final PersonService personService;
 
-    public AreaService(AreaRepository areaRepository, PersonRepository personRepository) {
+    public AreaService(AreaRepository areaRepository, PersonRepository personRepository, PersonService personService) {
         this.areaRepository = areaRepository;
         this.personRepository = personRepository;
+        this.personService = personService;
     }
 
-    public void addArea(AreaDTO areaDto, String username) {
-        Person owner = personRepository.findByLogin(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public void addArea(AreaDTO areaDto) {
+        Person owner = personService.getProfile();
 
         Area area = Area.builder()
                 .type(areaDto.getType())

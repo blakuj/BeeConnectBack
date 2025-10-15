@@ -1,8 +1,10 @@
 package com.beconnect.beeconnect_backend.Model;
 
+import com.beconnect.beeconnect_backend.Enum.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
+
 
 @Entity
 @Table(name = "person")
@@ -21,4 +23,10 @@ public class Person {
     private String email;
     private String login;
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private BeeGardenVerification verification;
 }
