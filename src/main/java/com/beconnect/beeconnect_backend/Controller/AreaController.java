@@ -19,20 +19,15 @@ public class AreaController {
     @Autowired
     private AreaService areaService;
 
-    @PostMapping
-    public ResponseEntity<?> addArea(@RequestBody AreaDTO areaDto,
-                                     @CookieValue(name = "session", required = false) String sessionToken) {
-        if (sessionToken == null) {
-            return ResponseEntity.status(401).body("Brak ciasteczka sesji");
+    @PostMapping("/addArea")
+    public ResponseEntity<?> addArea(@RequestBody AreaDTO areaDto) {
+        try {
+            areaService.addArea(areaDto);
+            return ResponseEntity.ok("Area added successfully");
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        String email = sessionStore.getEmail(sessionToken);
-        if (email == null) {
-            return ResponseEntity.status(401).body("Nieprawidłowa sesja");
-        }
-
-        areaService.addArea(areaDto, email);
-        return ResponseEntity.ok("Area added successfully");
     }
 
     @GetMapping("/my")

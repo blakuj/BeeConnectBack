@@ -1,5 +1,6 @@
 package com.beconnect.beeconnect_backend.Controller;
 
+import com.beconnect.beeconnect_backend.DTO.ChangePasswordDTO;
 import com.beconnect.beeconnect_backend.DTO.UpdateProfileDTO;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Service.PersonService;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 //
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/person")
 public class PersonController {
 
     private final PersonService personService;
@@ -22,54 +23,26 @@ public class PersonController {
 
     @GetMapping
     public ResponseEntity<Person> getProfile() {
-        System.out.println("\n=== CONTROLLER: GET /api/profile ===");
-
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        System.out.println("Zalogowany użytkownik: " + email);
-
-        Person person = personService.getProfile(email);
-
-        System.out.println("Zwracam profil użytkownika");
-        System.out.println("=== CONTROLLER: Koniec ===\n");
-
-        return ResponseEntity.ok(person);
+        return ResponseEntity.ok(personService.getProfile());
     }
 
-    @PutMapping
+    @PutMapping("/updateProfile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileDTO dto) {
-        System.out.println("\n=== CONTROLLER: PUT /api/profile ===");
-        System.out.println("Otrzymane dane: " + dto);
-
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        System.out.println("Zalogowany użytkownik: " + email);
-
         try {
-            Person updatedPerson = personService.updateProfile(email, dto);
+            personService.updateProfile(dto);
+            return ResponseEntity.ok().build();
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
-            System.out.println("Profil zaktualizowany!");
-            System.out.println("=== CONTROLLER: Koniec ===\n");
-
-            return ResponseEntity.ok(updatedPerson);
-        } catch (IllegalArgumentException e) {
-            System.out.println("❌ Błąd walidacji: " + e.getMessage());
-
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.badRequest().body(error);
-        } catch (RuntimeException e) {
-            System.out.println("❌ Błąd: " + e.getMessage());
-
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Wystąpił błąd serwera");
-
-            return ResponseEntity.status(500).body(error);
+    @PutMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO dto) {
+        try {
+            personService.changePassword(dto);
+            return ResponseEntity.ok().build();
+        }catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
