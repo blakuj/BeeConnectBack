@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.Service;
 
 import com.beconnect.beeconnect_backend.DTO.LoginDTO;
 import com.beconnect.beeconnect_backend.DTO.RegisterDTO;
+import com.beconnect.beeconnect_backend.Enum.Role;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import io.jsonwebtoken.Jwts;
@@ -36,6 +37,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .login(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
                 .build();
 
         personRepository.save(user);
@@ -74,6 +76,7 @@ public class AuthService {
                 .claim("lastname", user.getLastname())
                 .claim("phone", user.getPhone())
                 .claim("email", user.getEmail())
+                .claim("role", Role.USER)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24h
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes()))

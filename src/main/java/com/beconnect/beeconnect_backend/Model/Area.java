@@ -1,17 +1,16 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "area")
-@Data
+@Table(name = "areas")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,27 +19,44 @@ public class Area {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String type;
 
     @ElementCollection
     @CollectionTable(name = "area_coordinates", joinColumns = @JoinColumn(name = "area_id"))
     @Column(name = "coordinate")
-    private List<String> coordinates;
+    private List<String> coordinates = new ArrayList<>();
 
+    @Column(nullable = false)
+    private Double area;
 
-    private double area;
-
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    private int maxHives;
+    @Column(name = "max_hives")
+    private Integer maxHives;
 
-    private double pricePerDay;
+    @Column(name = "price_per_day")
+    private Double pricePerDay;
 
-    private LocalDateTime dateAdded;
+    @Column(nullable = false)
+    private String status = "AVAILABLE"; // AVAILABLE, OCCUPIED, PENDING, INACTIVE
+
+    @Column(name = "date_added")
+    private LocalDateTime dateAdded = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "person_id")
+    @JoinColumn(name = "owner_id")
     private Person owner;
 
-    private String status;
+    // Opcjonalne - dla wynajmu
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "renter_id")
+    private Person renter;
+
+    @Column(name = "rental_start_date")
+    private LocalDateTime rentalStartDate;
+
+    @Column(name = "rental_end_date")
+    private LocalDateTime rentalEndDate;
 }
