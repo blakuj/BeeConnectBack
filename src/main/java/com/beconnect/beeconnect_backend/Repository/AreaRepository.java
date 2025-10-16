@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface AreaRepository extends JpaRepository<Area, Long> {
     List<Area> findByOwner(Person owner);
+    long countByStatus(String status);
 }

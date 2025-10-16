@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "beeGarden")
+@Table(name = "bee_garden")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,13 +17,16 @@ public class BeeGarden {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
+
     private String adress;
-    private int hiveCount;
+
+    private Integer hiveCount;
+
     private String honeyType;
 
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "person_id")
+    @OneToOne
+    @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 }
