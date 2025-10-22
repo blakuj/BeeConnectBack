@@ -26,11 +26,17 @@ public class BeeGardenVerification {
     @Column(name = "status", nullable = false)
     private Status status = Status.PENDING;
 
-    @Column(name = "comment")
+    @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
     @Column(name = "creation_date")
     private LocalDateTime creationDate = LocalDateTime.now();
+
+    @Column(name = "reviewed_date")
+    private LocalDateTime reviewedDate;
+
+    @Column(name = "reviewed_by")
+    private String reviewedBy;
 
     @OneToOne
     @JoinColumn(name = "person_id", nullable = false)
