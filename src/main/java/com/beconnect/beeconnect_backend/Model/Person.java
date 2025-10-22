@@ -32,4 +32,10 @@ public class Person {
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private BeeGardenVerification verification;
+
+    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY)
+    private List<Area> rentedAreas;
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    private List<Area> ownedAreas;
 }
