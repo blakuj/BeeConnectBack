@@ -1,7 +1,7 @@
 package com.beconnect.beeconnect_backend.Controller;
 
-import com.beconnect.beeconnect_backend.Config.SessionStore;
 import com.beconnect.beeconnect_backend.DTO.AreaDTO;
+import com.beconnect.beeconnect_backend.DTO.EditAreaDTO;
 import com.beconnect.beeconnect_backend.Service.AreaService;
 
 import org.springframework.beans.factory.annotation.Autowired;
