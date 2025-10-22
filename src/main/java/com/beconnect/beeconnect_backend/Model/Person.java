@@ -25,6 +25,8 @@ public class Person {
     private String login;
     private String password;
 
+    private float balance;
+
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
