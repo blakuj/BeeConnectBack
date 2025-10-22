@@ -50,8 +50,8 @@ public class AdminService {
                 .pendingVerifications(verificationRepository.countByStatus(Status.PENDING))
                 .rejectedVerifications(verificationRepository.countByStatus(Status.REJECTED))
                 .totalAreas(areaRepository.count())
-                .availableAreas(areaRepository.countByStatus("AVAILABLE"))
-                .reservedAreas(areaRepository.countByStatus("RESERVED"))
+                .availableAreas(areaRepository.countByAvailabilityStatus("AVAILABLE"))
+                .reservedAreas(areaRepository.countByAvailabilityStatus("RESERVED"))
                 .totalProducts(0L) // TODO: gdy dodamy produkty
                 .adminsCount(personRepository.countByRole(Role.ADMIN))
                 .build();
