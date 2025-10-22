@@ -27,18 +27,9 @@ public class AreaController {
 
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<List<AreaDTO>> getMyAreas(@CookieValue(name = "session", required = false) String sessionToken) {
-        if (sessionToken == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        String email = sessionStore.getEmail(sessionToken);
-        if (email == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        List<AreaDTO> areas = areaService.getAreasForUser(email);
+    @GetMapping("/ownedAreas")
+    public ResponseEntity<List<AreaDTO>> getMyAreas(){
+        List<AreaDTO> areas = areaService.getOwnedAreas();
         return ResponseEntity.ok(areas);
     }
 
