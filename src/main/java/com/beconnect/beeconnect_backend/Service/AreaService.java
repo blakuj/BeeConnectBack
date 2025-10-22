@@ -51,9 +51,12 @@ public class AreaService {
         areaRepository.save(area);
     }
 
-    public List<AreaDTO> getAreasForUser(String username) {
-        Person owner = personRepository.findByLogin(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public List<AreaDTO> getOwnedAreas() {
+        return personService.getProfile().getOwnedAreas()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
 
         List<Area> areas = areaRepository.findByOwner(owner);
 
