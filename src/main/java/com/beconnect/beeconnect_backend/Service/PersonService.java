@@ -63,4 +63,10 @@ public class PersonService {
         personRepository.save(person);
 
     }
+
+    public void addFunds(Long amount){
+        Person person = getProfile();
+        person.setBalance(person.getBalance() + amount);
+        personRepository.save(person);
+    }
 }
