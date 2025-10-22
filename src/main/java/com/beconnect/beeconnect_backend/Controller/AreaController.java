@@ -54,6 +54,11 @@ public class AreaController {
         return ResponseEntity.ok("Area deleted successfully");
     }
 
+    @PutMapping("/editArea")
+    public ResponseEntity<?> editArea(@RequestBody EditAreaDTO editAreaDTO) {
+        areaService.editArea(editAreaDTO);
+        return ResponseEntity.ok("Area updated successfully");
+    }
 
 }
 
