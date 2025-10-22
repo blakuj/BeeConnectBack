@@ -33,6 +33,13 @@ public class AreaController {
         return ResponseEntity.ok(areas);
     }
 
+    @GetMapping("/rentedAreas")
+    public ResponseEntity<List<AreaDTO>> getMyRentedAreas(){
+        List<AreaDTO> areas = areaService.getRentedAreas();
+        return ResponseEntity.ok(areas);
+    }
+
+
     @GetMapping("/areas")
     public ResponseEntity<List<AreaDTO>> getAllAreas() {
         List<AreaDTO> areas = areaService.getAllAreas();
