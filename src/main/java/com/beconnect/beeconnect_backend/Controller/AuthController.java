@@ -1,10 +1,12 @@
 package com.beconnect.beeconnect_backend.Controller;
 
 import com.beconnect.beeconnect_backend.DTO.LoginDTO;
+import com.beconnect.beeconnect_backend.DTO.PersonDTO;
 import com.beconnect.beeconnect_backend.DTO.RegisterDTO;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import com.beconnect.beeconnect_backend.Service.AuthService;
+import com.beconnect.beeconnect_backend.Service.PersonService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
