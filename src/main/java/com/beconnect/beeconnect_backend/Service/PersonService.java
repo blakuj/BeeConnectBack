@@ -40,8 +40,9 @@ public class PersonService {
     }
 
     public Person getProfile() {
-        String mail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return personRepository.findByEmail(mail)
+        String idStr = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long id = Long.parseLong(idStr);
+        return personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
