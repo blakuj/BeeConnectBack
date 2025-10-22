@@ -40,8 +40,9 @@ public class PersonService {
     }
 
     public Person getProfile() {
-        String mail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return personRepository.findByEmail(mail)
+        String idStr = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long id = Long.parseLong(idStr);
+        return personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -61,5 +62,11 @@ public class PersonService {
         person.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
         personRepository.save(person);
 
+    }
+
+    public void addFunds(Long amount){
+        Person person = getProfile();
+        person.setBalance(person.getBalance() + amount);
+        personRepository.save(person);
     }
 }

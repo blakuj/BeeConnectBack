@@ -1,16 +1,16 @@
 package com.beconnect.beeconnect_backend.Controller;
 
 import com.beconnect.beeconnect_backend.DTO.LoginDTO;
+import com.beconnect.beeconnect_backend.DTO.PersonDTO;
 import com.beconnect.beeconnect_backend.DTO.RegisterDTO;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import com.beconnect.beeconnect_backend.Service.AuthService;
+import com.beconnect.beeconnect_backend.Service.PersonService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -21,10 +21,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final PersonRepository personRepository;
+    private final PersonService personService;
 
-    public AuthController(AuthService authService, PersonRepository personRepository) {
+    public AuthController(AuthService authService, PersonRepository personRepository, PersonService personService) {
         this.authService = authService;
         this.personRepository = personRepository;
+        this.personService = personService;
     }
 
     @PostMapping("/register")
@@ -66,12 +68,11 @@ public class AuthController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<Person> getCurrentUser(HttpServletRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("Fetching user for username: " + username);
-        Person user = personRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(user);
+    public ResponseEntity<PersonDTO> getCurrentUser() {
+        Person person = personService.getProfile();
+        PersonDTO personDTO = new PersonDTO(person.getId(), person.getFirstname(),person.getLastname(), person.getEmail(), person.getPhone(), person.getRole());
+
+        return ResponseEntity.ok(personDTO);
     }
 
     private void setJwtCookie(String token, HttpServletResponse response) {

@@ -12,9 +12,14 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     Optional<Person> findByLogin(String login);
     Optional<Person> findByEmail(String email);
 
-    // Policz użytkowników według roli
+
+
     long countByRole(Role role);
 
-    // Znajdź użytkowników według roli
+    Optional<Person> findById(Long id);
+  
     List<Person> findByRole(Role role);
 }
+
+
+

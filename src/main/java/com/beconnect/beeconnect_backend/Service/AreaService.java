@@ -1,6 +1,8 @@
 package com.beconnect.beeconnect_backend.Service;
 
 import com.beconnect.beeconnect_backend.DTO.AreaDTO;
+import com.beconnect.beeconnect_backend.DTO.EditAreaDTO;
+import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import com.beconnect.beeconnect_backend.Model.Area;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.AreaRepository;
@@ -8,8 +10,10 @@ import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,27 +43,56 @@ public class AreaService {
                 .description(areaDto.getDescription())
                 .maxHives(areaDto.getMaxHives())
                 .pricePerDay(areaDto.getPricePerDay())
-                .dateAdded(LocalDateTime.now())
+                .availableFrom(LocalDate.from(LocalDateTime.now()))
                 .owner(owner)
-                .status("AVAILABLE")
+                .availabilityStatus(AvailabilityStatus.AVAILABLE)
                 .build();
 
         areaRepository.save(area);
     }
 
-    public List<AreaDTO> getAreasForUser(String username) {
-        Person owner = personRepository.findByLogin(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public List<AreaDTO> getOwnedAreas() {
+        return personService.getProfile().getOwnedAreas()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
 
-        List<Area> areas = areaRepository.findByOwner(owner);
-
-        return areas.stream().map(this::mapToDTO).collect(Collectors.toList());
+    public List<AreaDTO> getRentedAreas() {
+        return personService.getProfile().getRentedAreas()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     public List<AreaDTO> getAllAreas() {
         List<Area> areas = areaRepository.findAll();
         return areas.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
+
+    public void editArea(EditAreaDTO editAreaDTO) {
+        Optional<Area> toEdit = areaRepository.findById(editAreaDTO.getId());
+
+        toEdit.ifPresent(area -> {
+            area.setName(editAreaDTO.getName());
+            area.setImgBase64(editAreaDTO.getImgBase64());
+            area.setType(editAreaDTO.getType());
+            area.setDescription(editAreaDTO.getDescription());
+            area.setEndDate(editAreaDTO.getEndDate());
+            area.setPricePerDay(editAreaDTO.getPricePerDay());
+            area.setMaxHives(editAreaDTO.getMaxHives());
+            area.setAvailabilityStatus(editAreaDTO.getAvailabilityStatus());
+            areaRepository.save(area);
+        });
+    }
+
+    public void deleteArea(Long id) {
+        Optional<Area> toDelete = areaRepository.findById(id);
+        toDelete.ifPresent(areaRepository::delete);
+    }
+
+
+
 
     private AreaDTO mapToDTO(Area area) {
         List<List<Double>> coords = area.getCoordinates().stream()
@@ -70,15 +103,19 @@ public class AreaService {
                 .collect(Collectors.toList());
 
         return new AreaDTO(
+                area.getId(),
                 area.getType(),
                 coords,
                 area.getArea(),
                 area.getDescription(),
                 area.getMaxHives(),
                 area.getPricePerDay(),
-                area.getStatus(),
-                area.getOwner() != null ? area.getOwner().getFirstname() : null,
-                area.getOwner() != null ? area.getOwner().getLastname() : null
+                area.getAvailabilityStatus(),
+                area.getOwner().getFirstname() != null ? area.getOwner().getFirstname() : null,
+                area.getOwner().getLastname() != null ? area.getOwner().getLastname() : null,
+                area.getAvailableFrom(),
+                area.getImgBase64(),
+                area.getName()
         );
     }
 }
