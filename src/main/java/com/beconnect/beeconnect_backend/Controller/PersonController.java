@@ -1,16 +1,15 @@
 package com.beconnect.beeconnect_backend.Controller;
 
+import com.beconnect.beeconnect_backend.DTO.AddFundsDTO;
 import com.beconnect.beeconnect_backend.DTO.ChangePasswordDTO;
 import com.beconnect.beeconnect_backend.DTO.UpdateProfileDTO;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Service.PersonService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-//
+
 @RestController
 @RequestMapping("/api/person")
 public class PersonController {
@@ -44,5 +43,11 @@ public class PersonController {
         }catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PutMapping("/addFunds")
+    public ResponseEntity<?> addFunds(@RequestBody AddFundsDTO addFundsDTO){
+        personService.addFunds(addFundsDTO.getAmount());
+        return ResponseEntity.ok().build();
     }
 }

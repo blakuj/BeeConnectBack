@@ -2,8 +2,9 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.Role;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import lombok.*;
+
+import java.util.List;
 
 
 @Entity
@@ -24,9 +25,17 @@ public class Person {
     private String login;
     private String password;
 
+    private float balance;
+
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private BeeGardenVerification verification;
+
+    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY)
+    private List<Area> rentedAreas;
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    private List<Area> ownedAreas;
 }

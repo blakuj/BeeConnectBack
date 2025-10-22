@@ -1,12 +1,10 @@
 package com.beconnect.beeconnect_backend.Model;
 
+import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -36,11 +34,24 @@ public class Area {
 
     private double pricePerDay;
 
-    private LocalDateTime dateAdded;
+    private LocalDate availableFrom;
+
+    private LocalDate endDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "person_id")
+    @JoinColumn(name = "owner_id")
+
     private Person owner;
 
-    private String status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    private Person tenant;
+
+    @Enumerated(EnumType.STRING)
+    private AvailabilityStatus availabilityStatus;
+
+    @Lob
+    private String imgBase64;
+
+    private String name;
 }

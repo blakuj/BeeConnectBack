@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.Service;
 
 import com.beconnect.beeconnect_backend.DTO.LoginDTO;
 import com.beconnect.beeconnect_backend.DTO.RegisterDTO;
+import com.beconnect.beeconnect_backend.Enum.Role;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import io.jsonwebtoken.Jwts;
@@ -35,6 +36,8 @@ public class AuthService {
                 .phone(request.getPhone())
                 .email(request.getEmail())
                 .login(request.getEmail())
+                .balance(0.0f)
+                .role(Role.USER)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
@@ -43,33 +46,21 @@ public class AuthService {
     }
 
     public String login(LoginDTO request) {
-        System.out.println("Attempting login with login: " + request.getLogin());
-
         Person user = personRepository
                 .findByLogin(request.getLogin())
-                .orElseThrow(() -> {
-                    System.out.println("User not found for login: " + request.getLogin());
-                    return new RuntimeException("Invalid credentials");
-                });
-
-        System.out.println("Found user: " + user.getEmail() + ", encoded password: " + user.getPassword());
-        System.out.println("Provided password: " + request.getPassword());
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            System.out.println("Password mismatch for login: " + request.getLogin());
             throw new RuntimeException("Invalid credentials");
         }
 
-        System.out.println("Generating JWT for user: " + user.getEmail());
-        String token = generateJwtToken(user);
-        System.out.println("Generated JWT: " + token);
-
-        return token;
+        return generateJwtToken(user);
     }
 
     private String generateJwtToken(Person user) {
         return Jwts.builder()
-                .subject(user.getEmail())
+                .subject(user.getId().toString())
+                .claim("role", user.getRole().toString())
                 .claim("firstname", user.getFirstname())
                 .claim("lastname", user.getLastname())
                 .claim("phone", user.getPhone())
