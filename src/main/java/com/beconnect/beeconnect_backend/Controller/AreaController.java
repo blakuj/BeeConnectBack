@@ -45,5 +45,15 @@ public class AreaController {
         List<AreaDTO> areas = areaService.getAllAreas();
         return ResponseEntity.ok(areas);
     }
+
+
+
+    @PostMapping("/deleteArea/{id}")
+    public ResponseEntity<?> deleteArea(@PathVariable Long id) {
+        areaService.deleteArea(id);
+        return ResponseEntity.ok("Area deleted successfully");
+    }
+
+
 }
 
