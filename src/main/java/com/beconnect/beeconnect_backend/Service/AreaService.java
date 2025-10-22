@@ -58,9 +58,11 @@ public class AreaService {
                 .collect(Collectors.toList());
     }
 
-        List<Area> areas = areaRepository.findByOwner(owner);
-
-        return areas.stream().map(this::mapToDTO).collect(Collectors.toList());
+    public List<AreaDTO> getRentedAreas() {
+        return personService.getProfile().getRentedAreas()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     public List<AreaDTO> getAllAreas() {
