@@ -44,4 +44,10 @@ public class PersonController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/addFunds")
+    public ResponseEntity<?> addFunds(@RequestBody AddFundsDTO addFundsDTO){
+        personService.addFunds(addFundsDTO.getAmount());
+        return ResponseEntity.ok().build();
+    }
 }
