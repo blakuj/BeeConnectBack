@@ -22,7 +22,6 @@ public class BeeGarden {
     private int hiveCount;
     private String honeyType;
 
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "person_id")
     private Person person;
