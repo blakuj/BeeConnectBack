@@ -14,9 +14,6 @@ import java.util.List;
 @RequestMapping("/api")
 public class AreaController {
     @Autowired
-    private SessionStore sessionStore;
-
-    @Autowired
     private AreaService areaService;
 
     @PostMapping("/addArea")
