@@ -68,12 +68,11 @@ public class AuthController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<Person> getCurrentUser(HttpServletRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("Fetching user for username: " + username);
-        Person user = personRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(user);
+    public ResponseEntity<PersonDTO> getCurrentUser() {
+        Person person = personService.getProfile();
+        PersonDTO personDTO = new PersonDTO(person.getId(), person.getFirstname(),person.getLastname(), person.getEmail(), person.getPhone(), person.getRole());
+
+        return ResponseEntity.ok(personDTO);
     }
 
     private void setJwtCookie(String token, HttpServletResponse response) {
