@@ -1,7 +1,9 @@
 package com.beconnect.beeconnect_backend.DTO;
 
+import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
