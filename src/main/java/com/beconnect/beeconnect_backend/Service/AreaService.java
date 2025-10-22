@@ -103,15 +103,19 @@ public class AreaService {
                 .collect(Collectors.toList());
 
         return new AreaDTO(
+                area.getId(),
                 area.getType(),
                 coords,
                 area.getArea(),
                 area.getDescription(),
                 area.getMaxHives(),
                 area.getPricePerDay(),
-                area.getStatus(),
-                area.getOwner() != null ? area.getOwner().getFirstname() : null,
-                area.getOwner() != null ? area.getOwner().getLastname() : null
+                area.getAvailabilityStatus(),
+                area.getOwner().getFirstname() != null ? area.getOwner().getFirstname() : null,
+                area.getOwner().getLastname() != null ? area.getOwner().getLastname() : null,
+                area.getAvailableFrom(),
+                area.getImgBase64(),
+                area.getName()
         );
     }
 }
