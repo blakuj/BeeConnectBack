@@ -2,8 +2,9 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.Role;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import lombok.*;
+
+import java.util.List;
 
 
 @Entity
