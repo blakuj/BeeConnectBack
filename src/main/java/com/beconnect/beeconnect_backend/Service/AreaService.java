@@ -1,6 +1,8 @@
 package com.beconnect.beeconnect_backend.Service;
 
 import com.beconnect.beeconnect_backend.DTO.AreaDTO;
+import com.beconnect.beeconnect_backend.DTO.EditAreaDTO;
+import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import com.beconnect.beeconnect_backend.Model.Area;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.AreaRepository;
@@ -8,8 +10,10 @@ import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
