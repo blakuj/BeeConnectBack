@@ -8,11 +8,9 @@ import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import com.beconnect.beeconnect_backend.Service.AuthService;
 import com.beconnect.beeconnect_backend.Service.PersonService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
