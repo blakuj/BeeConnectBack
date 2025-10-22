@@ -59,7 +59,8 @@ public class AuthService {
 
     private String generateJwtToken(Person user) {
         return Jwts.builder()
-                .subject(user.getEmail())
+                .subject(user.getId().toString())
+                .claim("role", user.getRole().toString())
                 .claim("firstname", user.getFirstname())
                 .claim("lastname", user.getLastname())
                 .claim("phone", user.getPhone())
