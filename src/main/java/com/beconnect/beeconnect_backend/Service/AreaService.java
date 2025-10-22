@@ -43,9 +43,9 @@ public class AreaService {
                 .description(areaDto.getDescription())
                 .maxHives(areaDto.getMaxHives())
                 .pricePerDay(areaDto.getPricePerDay())
-                .dateAdded(LocalDateTime.now())
+                .availableFrom(LocalDate.from(LocalDateTime.now()))
                 .owner(owner)
-                .status("AVAILABLE")
+                .availabilityStatus(AvailabilityStatus.AVAILABLE)
                 .build();
 
         areaRepository.save(area);
