@@ -10,8 +10,8 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
     List<Area> findByOwner(Person owner);
 
     // Policz obszary według statusu
-    long countByStatus(String status);
+    long countByAvailabilityStatus(String status);
 
     // Znajdź obszary według statusu
-    List<Area> findByStatus(String status);
+    List<Area> findByAvailabilityStatus(String status);
 }
