@@ -70,6 +70,30 @@ public class AreaService {
         return areas.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+    public void editArea(EditAreaDTO editAreaDTO) {
+        Optional<Area> toEdit = areaRepository.findById(editAreaDTO.getId());
+
+        toEdit.ifPresent(area -> {
+            area.setName(editAreaDTO.getName());
+            area.setImgBase64(editAreaDTO.getImgBase64());
+            area.setType(editAreaDTO.getType());
+            area.setDescription(editAreaDTO.getDescription());
+            area.setEndDate(editAreaDTO.getEndDate());
+            area.setPricePerDay(editAreaDTO.getPricePerDay());
+            area.setMaxHives(editAreaDTO.getMaxHives());
+            area.setAvailabilityStatus(editAreaDTO.getAvailabilityStatus());
+            areaRepository.save(area);
+        });
+    }
+
+    public void deleteArea(Long id) {
+        Optional<Area> toDelete = areaRepository.findById(id);
+        toDelete.ifPresent(areaRepository::delete);
+    }
+
+
+
+
     private AreaDTO mapToDTO(Area area) {
         List<List<Double>> coords = area.getCoordinates().stream()
                 .map(s -> {
