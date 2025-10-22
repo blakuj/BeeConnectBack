@@ -23,10 +23,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final PersonRepository personRepository;
+    private final PersonService personService;
 
-    public AuthController(AuthService authService, PersonRepository personRepository) {
+    public AuthController(AuthService authService, PersonRepository personRepository, PersonService personService) {
         this.authService = authService;
         this.personRepository = personRepository;
+        this.personService = personService;
     }
 
     @PostMapping("/register")
