@@ -38,7 +38,7 @@ public class BeeGardenVerification {
     @Column(name = "reviewed_by")
     private String reviewedBy;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 

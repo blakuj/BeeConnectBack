@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -30,8 +31,8 @@ public class Person {
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private BeeGardenVerification verification;
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BeeGardenVerification> verifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY)
     private List<Area> rentedAreas;
