@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.DTO.DashboardStatsDTO;
 import com.beconnect.beeconnect_backend.DTO.DocumentDTO;
 import com.beconnect.beeconnect_backend.DTO.VerificationDecisionDTO;
 import com.beconnect.beeconnect_backend.DTO.VerificationResponseDTO;
+import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import com.beconnect.beeconnect_backend.Enum.Role;
 import com.beconnect.beeconnect_backend.Enum.Status;
 import com.beconnect.beeconnect_backend.Model.BeeGarden;
@@ -50,8 +51,8 @@ public class AdminService {
                 .pendingVerifications(verificationRepository.countByStatus(Status.PENDING))
                 .rejectedVerifications(verificationRepository.countByStatus(Status.REJECTED))
                 .totalAreas(areaRepository.count())
-                .availableAreas(areaRepository.countByAvailabilityStatus("AVAILABLE"))
-                .reservedAreas(areaRepository.countByAvailabilityStatus("RESERVED"))
+                .availableAreas(areaRepository.countByAvailabilityStatus(AvailabilityStatus.AVAILABLE))
+                .reservedAreas(areaRepository.countByAvailabilityStatus(AvailabilityStatus.UNAVAILABLE))
                 .totalProducts(0L) // TODO: gdy dodamy produkty
                 .adminsCount(personRepository.countByRole(Role.ADMIN))
                 .build();
