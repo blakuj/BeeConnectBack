@@ -70,7 +70,13 @@ public class AuthController {
     @GetMapping("/user")
     public ResponseEntity<PersonDTO> getCurrentUser() {
         Person person = personService.getProfile();
-        PersonDTO personDTO = new PersonDTO(person.getId(), person.getFirstname(),person.getLastname(), person.getEmail(), person.getPhone(), person.getRole());
+        PersonDTO personDTO = new PersonDTO(person.getId(),
+                person.getFirstname(),
+                person.getLastname(),
+                person.getEmail(),
+                person.getPhone(),
+                person.getRole(),
+                person.getBalance());
 
         return ResponseEntity.ok(personDTO);
     }

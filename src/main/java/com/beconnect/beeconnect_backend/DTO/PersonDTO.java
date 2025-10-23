@@ -15,4 +15,5 @@ public class PersonDTO {
     String email;
     String phone;
     Role role;
+    float balance;
 }
