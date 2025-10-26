@@ -2,12 +2,15 @@ package com.beconnect.beeconnect_backend.Controller;
 
 import com.beconnect.beeconnect_backend.DTO.AddFundsDTO;
 import com.beconnect.beeconnect_backend.DTO.ChangePasswordDTO;
+import com.beconnect.beeconnect_backend.DTO.PersonDTO;
 import com.beconnect.beeconnect_backend.DTO.UpdateProfileDTO;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Service.PersonService;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -24,6 +27,12 @@ public class PersonController {
     public ResponseEntity<Person> getProfile() {
         return ResponseEntity.ok(personService.getProfile());
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<PersonDTO>> getUsers() {
+        return ResponseEntity.ok(personService.getAllUsers());
+    }
+
 
     @PutMapping("/updateProfile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileDTO dto) {
