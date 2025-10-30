@@ -35,4 +35,73 @@ public class ReservationService {
     @Autowired
     private PersonService personService;
 
+
+    @Transactional
+    public ReservationResponseDTO createReservation(CreateReservationDTO dto) {
+        Person tenant = personService.getProfile();
+
+        validateReservationData(dto);
+
+        Area area = areaRepository.findById(dto.getAreaId())
+                .orElseThrow(() -> new RuntimeException("Area not found"));
+
+        if (area.getAvailabilityStatus() != AvailabilityStatus.AVAILABLE) {
+            throw new RuntimeException("Area is not available for reservation");
+        }
+
+        if (area.getOwner().getId().equals(tenant.getId())) {
+            throw new RuntimeException("You cannot reserve your own area");
+        }
+
+        if (dto.getNumberOfHives() > area.getMaxHives()) {
+            throw new RuntimeException("Number of hives exceeds area limit (max: " + area.getMaxHives() + ")");
+        }
+
+        List<Reservation> overlapping = reservationRepository.findOverlappingReservations(
+                area.getId(), dto.getStartDate(), dto.getEndDate());
+
+        if (!overlapping.isEmpty()) {
+            throw new RuntimeException("Selected dates overlap with existing reservations");
+        }
+
+        long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
+        if (days <= 0) {
+            throw new RuntimeException("End date must be after start date");
+        }
+
+        double totalPrice = days * area.getPricePerDay();
+
+        if (tenant.getBalance() < totalPrice) {
+            throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + tenant.getBalance() + " PLN");
+        }
+
+        tenant.setBalance((float) (tenant.getBalance() - totalPrice));
+        personRepository.save(tenant);
+
+        Person owner = area.getOwner();
+        owner.setBalance((float) (owner.getBalance() + totalPrice));
+        personRepository.save(owner);
+
+        Reservation reservation = Reservation.builder()
+                .area(area)
+                .tenant(tenant)
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .numberOfHives(dto.getNumberOfHives())
+                .totalPrice(totalPrice)
+                .pricePerDay(area.getPricePerDay())
+                .status(ReservationStatus.CONFIRMED)
+                .confirmedAt(LocalDateTime.now())
+                .notes(dto.getNotes())
+                .build();
+
+        reservation = reservationRepository.save(reservation);
+
+        area.setTenant(tenant);
+        area.setAvailabilityStatus(AvailabilityStatus.UNAVAILABLE);
+        areaRepository.save(area);
+
+        return mapToDTO(reservation);
+    }
+
 }
