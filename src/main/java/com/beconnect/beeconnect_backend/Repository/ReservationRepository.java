@@ -24,5 +24,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByTenantAndStatus(Person tenant, ReservationStatus status);
 
+    List<Reservation> findByArea(Area area);
+
+    List<Reservation> findByAreaAndStatus(Area area, ReservationStatus status);
 
 }
