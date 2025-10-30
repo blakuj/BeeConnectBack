@@ -53,4 +53,18 @@ public class ReservationController {
         }
     }
 
+
+    @GetMapping("/my/status/{status}")
+    public ResponseEntity<?> getMyReservationsByStatus(@PathVariable String status) {
+        try {
+            ReservationStatus statusEnum = ReservationStatus.valueOf(status.toUpperCase());
+            List<ReservationResponseDTO> reservations = reservationService.getMyReservationsByStatus(statusEnum);
+            return ResponseEntity.ok(reservations);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
+
 }
