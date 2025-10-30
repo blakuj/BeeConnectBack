@@ -156,4 +156,13 @@ public class ReservationService {
     }
 
 
+    public List<ReservationResponseDTO> getMyReservationsByStatus(ReservationStatus status) {
+        Person tenant = personService.getProfile();
+        List<Reservation> reservations = reservationRepository.findByTenantAndStatus(tenant, status);
+        return reservations.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
 }
