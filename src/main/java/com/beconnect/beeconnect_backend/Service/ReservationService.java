@@ -193,4 +193,32 @@ public class ReservationService {
     }
 
 
+    @Transactional
+    public void updateReservationStatuses() {
+        LocalDate today = LocalDate.now();
+
+        List<Reservation> toComplete = reservationRepository.findActiveReservationsEndingBefore(today);
+
+        for (Reservation reservation : toComplete) {
+            reservation.setStatus(ReservationStatus.COMPLETED);
+
+            Area area = reservation.getArea();
+            area.setTenant(null);
+            area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
+            areaRepository.save(area);
+
+            reservationRepository.save(reservation);
+        }
+
+        List<Reservation> toActivate = reservationRepository.findAll().stream()
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
+                .filter(r -> !r.getStartDate().isAfter(today))
+                .collect(Collectors.toList());
+
+        for (Reservation reservation : toActivate) {
+            reservation.setStatus(ReservationStatus.ACTIVE);
+            reservationRepository.save(reservation);
+        }
+    }
+
 }
