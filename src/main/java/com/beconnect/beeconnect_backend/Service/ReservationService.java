@@ -221,4 +221,23 @@ public class ReservationService {
         }
     }
 
+
+    private void validateReservationData(CreateReservationDTO dto) {
+        if (dto.getAreaId() == null) {
+            throw new RuntimeException("Area ID is required");
+        }
+        if (dto.getStartDate() == null || dto.getEndDate() == null) {
+            throw new RuntimeException("Start and end dates are required");
+        }
+        if (dto.getStartDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Start date cannot be in the past");
+        }
+        if (dto.getEndDate().isBefore(dto.getStartDate()) || dto.getEndDate().isEqual(dto.getStartDate())) {
+            throw new RuntimeException("End date must be after start date");
+        }
+        if (dto.getNumberOfHives() == null || dto.getNumberOfHives() <= 0) {
+            throw new RuntimeException("Number of hives must be greater than 0");
+        }
+    }
+
 }
