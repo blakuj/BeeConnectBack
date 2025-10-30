@@ -176,4 +176,21 @@ public class ReservationService {
     }
 
 
+    public ReservationResponseDTO getReservationById(Long id) {
+        Person currentUser = personService.getProfile();
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+
+        boolean isTenant = reservation.getTenant().getId().equals(currentUser.getId());
+        boolean isOwner = reservation.getArea().getOwner().getId().equals(currentUser.getId());
+
+        if (!isTenant && !isOwner) {
+            throw new RuntimeException("You don't have permission to view this reservation");
+        }
+
+        return mapToDTO(reservation);
+    }
+
+
 }
