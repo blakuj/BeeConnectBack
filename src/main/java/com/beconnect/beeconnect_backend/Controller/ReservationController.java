@@ -41,4 +41,16 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ReservationResponseDTO>> getMyReservations() {
+        try {
+            List<ReservationResponseDTO> reservations = reservationService.getMyReservations();
+            return ResponseEntity.ok(reservations);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
+
 }
