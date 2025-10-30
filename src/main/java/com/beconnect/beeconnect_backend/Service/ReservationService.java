@@ -147,4 +147,13 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
+    public List<ReservationResponseDTO> getMyReservations() {
+        Person tenant = personService.getProfile();
+        List<Reservation> reservations = reservationRepository.findByTenant(tenant);
+        return reservations.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
 }
