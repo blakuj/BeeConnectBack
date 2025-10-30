@@ -240,4 +240,35 @@ public class ReservationService {
         }
     }
 
+    private ReservationResponseDTO mapToDTO(Reservation reservation) {
+        Area area = reservation.getArea();
+        Person tenant = reservation.getTenant();
+        Person owner = area.getOwner();
+
+        return ReservationResponseDTO.builder()
+                .id(reservation.getId())
+                .areaId(area.getId())
+                .areaName(area.getName())
+                .areaType(area.getType())
+                .tenantId(tenant.getId())
+                .tenantFirstname(tenant.getFirstname())
+                .tenantLastname(tenant.getLastname())
+                .tenantEmail(tenant.getEmail())
+                .startDate(reservation.getStartDate())
+                .endDate(reservation.getEndDate())
+                .numberOfHives(reservation.getNumberOfHives())
+                .totalPrice(reservation.getTotalPrice())
+                .pricePerDay(reservation.getPricePerDay())
+                .status(reservation.getStatus())
+                .createdAt(reservation.getCreatedAt())
+                .confirmedAt(reservation.getConfirmedAt())
+                .cancelledAt(reservation.getCancelledAt())
+                .notes(reservation.getNotes())
+                .cancellationReason(reservation.getCancellationReason())
+                .ownerFirstname(owner.getFirstname())
+                .ownerLastname(owner.getLastname())
+                .ownerEmail(owner.getEmail())
+                .ownerPhone(owner.getPhone())
+                .build();
+    }
 }
