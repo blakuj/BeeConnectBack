@@ -78,5 +78,14 @@ public class ReservationController {
         }
     }
 
-
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getReservationById(@PathVariable Long id) {
+        try {
+            ReservationResponseDTO reservation = reservationService.getReservationById(id);
+            return ResponseEntity.ok(reservation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }
