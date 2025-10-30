@@ -30,9 +30,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
             throws Exception {
-            http
+        http
                 .csrf(csrf -> csrf.disable())
-                    .cors(c -> corsConfigurationSource())
+                .cors(c -> corsConfigurationSource())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/api/auth/**",
-                                "/api/areas/**"
+                                "/api/areas/**",
+                                "/api/reservations/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
