@@ -165,4 +165,15 @@ public class ReservationService {
     }
 
 
+    public List<ReservationResponseDTO> getReservationsForMyAreas() {
+        Person owner = personService.getProfile();
+        List<Area> myAreas = areaRepository.findByOwner(owner);
+
+        return myAreas.stream()
+                .flatMap(area -> reservationRepository.findByArea(area).stream())
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
 }
