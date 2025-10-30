@@ -28,4 +28,17 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelReservation(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String reason = request.getOrDefault("reason", "No reason provided");
+            ReservationResponseDTO reservation = reservationService.cancelReservation(id, reason);
+            return ResponseEntity.ok(reservation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
