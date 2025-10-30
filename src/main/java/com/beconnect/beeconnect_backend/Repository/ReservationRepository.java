@@ -28,4 +28,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByAreaAndStatus(Area area, ReservationStatus status);
 
+    @Query("SELECT r FROM Reservation r WHERE r.area.id = :areaId " +
+            "AND r.status IN ('CONFIRMED', 'ACTIVE') " +
+            "AND ((r.startDate <= :endDate AND r.endDate >= :startDate))")
+    List<Reservation> findOverlappingReservations(
+            @Param("areaId") Long areaId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
 }
