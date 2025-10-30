@@ -104,4 +104,47 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
+
+    @Transactional
+    public ReservationResponseDTO cancelReservation(Long reservationId, String reason) {
+        Person currentUser = personService.getProfile();
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+
+        boolean isTenant = reservation.getTenant().getId().equals(currentUser.getId());
+        boolean isOwner = reservation.getArea().getOwner().getId().equals(currentUser.getId());
+
+        if (!isTenant && !isOwner) {
+            throw new RuntimeException("You don't have permission to cancel this reservation");
+        }
+
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED &&
+                reservation.getStatus() != ReservationStatus.ACTIVE) {
+            throw new RuntimeException("Only confirmed or active reservations can be cancelled");
+        }
+
+        Person tenant = reservation.getTenant();
+        Person owner = reservation.getArea().getOwner();
+
+        tenant.setBalance(tenant.getBalance() + reservation.getTotalPrice().floatValue());
+        owner.setBalance(owner.getBalance() - reservation.getTotalPrice().floatValue());
+
+        personRepository.save(tenant);
+        personRepository.save(owner);
+
+        Area area = reservation.getArea();
+        area.setTenant(null);
+        area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
+        areaRepository.save(area);
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setCancelledAt(LocalDateTime.now());
+        reservation.setCancellationReason(reason);
+
+        reservation = reservationRepository.save(reservation);
+
+        return mapToDTO(reservation);
+    }
+
 }
