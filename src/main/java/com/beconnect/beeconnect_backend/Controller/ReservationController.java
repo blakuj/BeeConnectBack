@@ -67,4 +67,16 @@ public class ReservationController {
         }
     }
 
+
+    @GetMapping("/areas")
+    public ResponseEntity<List<ReservationResponseDTO>> getReservationsForMyAreas() {
+        try {
+            List<ReservationResponseDTO> reservations = reservationService.getReservationsForMyAreas();
+            return ResponseEntity.ok(reservations);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
+
+
 }
