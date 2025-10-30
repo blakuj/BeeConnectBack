@@ -37,4 +37,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("SELECT r FROM Reservation r WHERE r.status = 'ACTIVE' " +
+            "AND r.endDate < :date")
+    List<Reservation> findActiveReservationsEndingBefore(@Param("date") LocalDate date);
+
+    long countByStatus(ReservationStatus status);
 }
