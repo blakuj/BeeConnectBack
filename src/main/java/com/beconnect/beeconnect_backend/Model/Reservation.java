@@ -49,4 +49,20 @@ public class Reservation {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private LocalDateTime confirmedAt;
+
+    @Column
+    private LocalDateTime cancelledAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @Column
+    private String cancellationReason;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }
