@@ -35,28 +35,36 @@ public class ReservationService {
     @Autowired
     private PersonService personService;
 
-
+    /**
+     * Utwórz i NATYCHMIAST POTWIERDŹ rezerwację (uproszczony proces)
+     */
     @Transactional
     public ReservationResponseDTO createReservation(CreateReservationDTO dto) {
         Person tenant = personService.getProfile();
 
+        // Walidacja danych wejściowych
         validateReservationData(dto);
 
+        // Pobierz obszar
         Area area = areaRepository.findById(dto.getAreaId())
                 .orElseThrow(() -> new RuntimeException("Area not found"));
 
+        // Sprawdź czy obszar jest dostępny
         if (area.getAvailabilityStatus() != AvailabilityStatus.AVAILABLE) {
             throw new RuntimeException("Area is not available for reservation");
         }
 
+        // Sprawdź czy użytkownik nie jest właścicielem
         if (area.getOwner().getId().equals(tenant.getId())) {
             throw new RuntimeException("You cannot reserve your own area");
         }
 
+        // Sprawdź czy liczba uli nie przekracza limitu
         if (dto.getNumberOfHives() > area.getMaxHives()) {
             throw new RuntimeException("Number of hives exceeds area limit (max: " + area.getMaxHives() + ")");
         }
 
+        // Sprawdź czy nie ma nakładających się rezerwacji
         List<Reservation> overlapping = reservationRepository.findOverlappingReservations(
                 area.getId(), dto.getStartDate(), dto.getEndDate());
 
@@ -64,6 +72,7 @@ public class ReservationService {
             throw new RuntimeException("Selected dates overlap with existing reservations");
         }
 
+        // Oblicz liczbę dni i całkowity koszt
         long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
         if (days <= 0) {
             throw new RuntimeException("End date must be after start date");
@@ -71,17 +80,21 @@ public class ReservationService {
 
         double totalPrice = days * area.getPricePerDay();
 
+        // Sprawdź saldo użytkownika
         if (tenant.getBalance() < totalPrice) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + tenant.getBalance() + " PLN");
         }
 
+        // POBIERZ ŚRODKI OD RAZU
         tenant.setBalance((float) (tenant.getBalance() - totalPrice));
         personRepository.save(tenant);
 
+        // DODAJ ŚRODKI WŁAŚCICIELOWI
         Person owner = area.getOwner();
         owner.setBalance((float) (owner.getBalance() + totalPrice));
         personRepository.save(owner);
 
+        // Utwórz rezerwację jako CONFIRMED od razu
         Reservation reservation = Reservation.builder()
                 .area(area)
                 .tenant(tenant)
@@ -97,6 +110,7 @@ public class ReservationService {
 
         reservation = reservationRepository.save(reservation);
 
+        // Zaktualizuj status obszaru na UNAVAILABLE
         area.setTenant(tenant);
         area.setAvailabilityStatus(AvailabilityStatus.UNAVAILABLE);
         areaRepository.save(area);
@@ -104,7 +118,9 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
-
+    /**
+     * Anuluj rezerwację
+     */
     @Transactional
     public ReservationResponseDTO cancelReservation(Long reservationId, String reason) {
         Person currentUser = personService.getProfile();
@@ -112,6 +128,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
+        // Sprawdź uprawnienia
         boolean isTenant = reservation.getTenant().getId().equals(currentUser.getId());
         boolean isOwner = reservation.getArea().getOwner().getId().equals(currentUser.getId());
 
@@ -119,11 +136,13 @@ public class ReservationService {
             throw new RuntimeException("You don't have permission to cancel this reservation");
         }
 
+        // Można anulować tylko CONFIRMED lub ACTIVE
         if (reservation.getStatus() != ReservationStatus.CONFIRMED &&
                 reservation.getStatus() != ReservationStatus.ACTIVE) {
             throw new RuntimeException("Only confirmed or active reservations can be cancelled");
         }
 
+        // Zwróć środki
         Person tenant = reservation.getTenant();
         Person owner = reservation.getArea().getOwner();
 
@@ -133,6 +152,7 @@ public class ReservationService {
         personRepository.save(tenant);
         personRepository.save(owner);
 
+        // Uwolnij obszar
         Area area = reservation.getArea();
         area.setTenant(null);
         area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
@@ -147,6 +167,9 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
+    /**
+     * Pobierz wszystkie rezerwacje użytkownika (jako najemca)
+     */
     public List<ReservationResponseDTO> getMyReservations() {
         Person tenant = personService.getProfile();
         List<Reservation> reservations = reservationRepository.findByTenant(tenant);
@@ -155,7 +178,9 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz rezerwacje według statusu
+     */
     public List<ReservationResponseDTO> getMyReservationsByStatus(ReservationStatus status) {
         Person tenant = personService.getProfile();
         List<Reservation> reservations = reservationRepository.findByTenantAndStatus(tenant, status);
@@ -164,6 +189,9 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Pobierz rezerwacje dla obszarów użytkownika (jako właściciel)
+     */
 
     public List<ReservationResponseDTO> getReservationsForMyAreas() {
         Person owner = personService.getProfile();
@@ -175,13 +203,16 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz szczegóły rezerwacji
+     */
     public ReservationResponseDTO getReservationById(Long id) {
         Person currentUser = personService.getProfile();
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
+        // Sprawdź uprawnienia
         boolean isTenant = reservation.getTenant().getId().equals(currentUser.getId());
         boolean isOwner = reservation.getArea().getOwner().getId().equals(currentUser.getId());
 
@@ -192,16 +223,20 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
-
+    /**
+     * Zaktualizuj statusy rezerwacji - tylko ACTIVE → COMPLETED
+     */
     @Transactional
     public void updateReservationStatuses() {
         LocalDate today = LocalDate.now();
 
+        // Zakończ aktywne rezerwacje, które się skończyły
         List<Reservation> toComplete = reservationRepository.findActiveReservationsEndingBefore(today);
 
         for (Reservation reservation : toComplete) {
             reservation.setStatus(ReservationStatus.COMPLETED);
 
+            // Uwolnij obszar
             Area area = reservation.getArea();
             area.setTenant(null);
             area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
@@ -210,6 +245,7 @@ public class ReservationService {
             reservationRepository.save(reservation);
         }
 
+        // Aktywuj potwierdzone rezerwacje, których czas nadszedł
         List<Reservation> toActivate = reservationRepository.findAll().stream()
                 .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
                 .filter(r -> !r.getStartDate().isAfter(today))
@@ -221,7 +257,9 @@ public class ReservationService {
         }
     }
 
-
+    /**
+     * Walidacja danych rezerwacji
+     */
     private void validateReservationData(CreateReservationDTO dto) {
         if (dto.getAreaId() == null) {
             throw new RuntimeException("Area ID is required");
@@ -240,6 +278,9 @@ public class ReservationService {
         }
     }
 
+    /**
+     * Mapowanie Reservation → ReservationResponseDTO
+     */
     private ReservationResponseDTO mapToDTO(Reservation reservation) {
         Area area = reservation.getArea();
         Person tenant = reservation.getTenant();

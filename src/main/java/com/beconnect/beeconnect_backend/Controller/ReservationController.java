@@ -19,6 +19,7 @@ public class ReservationController {
     @Autowired
     private ReservationService reservationService;
 
+
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody CreateReservationDTO dto) {
         try {
@@ -28,6 +29,7 @@ public class ReservationController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<?> cancelReservation(
@@ -78,6 +80,10 @@ public class ReservationController {
         }
     }
 
+    /**
+     * GET /api/reservations/{id}
+     * Pobierz szczegóły rezerwacji
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getReservationById(@PathVariable Long id) {
         try {

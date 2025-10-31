@@ -33,6 +33,7 @@ public class ReservationResponseDTO {
     private String notes;
     private String cancellationReason;
 
+    // Dodatkowe dane właściciela obszaru
     private String ownerFirstname;
     private String ownerLastname;
     private String ownerEmail;
