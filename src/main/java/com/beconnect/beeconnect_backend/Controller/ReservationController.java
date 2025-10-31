@@ -19,10 +19,7 @@ public class ReservationController {
     @Autowired
     private ReservationService reservationService;
 
-    /**
-     * POST /api/reservations
-     * Utwórz i od razu potwierdź rezerwację (uproszczony proces)
-     */
+
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody CreateReservationDTO dto) {
         try {
@@ -33,10 +30,7 @@ public class ReservationController {
         }
     }
 
-    /**
-     * POST /api/reservations/{id}/cancel
-     * Anuluj rezerwację
-     */
+
     @PostMapping("/{id}/cancel")
     public ResponseEntity<?> cancelReservation(
             @PathVariable Long id,
@@ -50,10 +44,7 @@ public class ReservationController {
         }
     }
 
-    /**
-     * GET /api/reservations/my
-     * Pobierz wszystkie moje rezerwacje (jako najemca)
-     */
+
     @GetMapping("/my")
     public ResponseEntity<List<ReservationResponseDTO>> getMyReservations() {
         try {
@@ -64,10 +55,7 @@ public class ReservationController {
         }
     }
 
-    /**
-     * GET /api/reservations/my/status/{status}
-     * Pobierz moje rezerwacje według statusu
-     */
+
     @GetMapping("/my/status/{status}")
     public ResponseEntity<?> getMyReservationsByStatus(@PathVariable String status) {
         try {
@@ -81,10 +69,7 @@ public class ReservationController {
         }
     }
 
-    /**
-     * GET /api/reservations/areas
-     * Pobierz rezerwacje dla moich obszarów (jako właściciel)
-     */
+
     @GetMapping("/areas")
     public ResponseEntity<List<ReservationResponseDTO>> getReservationsForMyAreas() {
         try {
