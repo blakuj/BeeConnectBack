@@ -20,4 +20,14 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+
+    @GetMapping
+    public ResponseEntity<List<ProductDTO>> getAllProducts() {
+        try {
+            List<ProductDTO> products = productService.getAllProducts();
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 }
