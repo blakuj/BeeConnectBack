@@ -49,4 +49,14 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<OrderDTO>> getAllMyOrders() {
+        try {
+            List<OrderDTO> orders = orderService.getAllMyOrders();
+            return ResponseEntity.ok(orders);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
 }
