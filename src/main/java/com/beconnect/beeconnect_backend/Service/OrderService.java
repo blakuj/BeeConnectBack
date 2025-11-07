@@ -112,6 +112,24 @@ public class OrderService {
     }
 
 
+    public OrderDTO getOrderById(Long id) {
+        Person currentUser = personService.getProfile();
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        boolean isBuyer = order.getBuyer().getId().equals(currentUser.getId());
+        boolean isSeller = order.getSeller().getId().equals(currentUser.getId());
+
+        if (!isBuyer && !isSeller) {
+            throw new RuntimeException("You don't have permission to view this order");
+        }
+
+        return mapToDTO(order);
+    }
+
+
+
 
     private OrderDTO mapToDTO(Order order) {
         return OrderDTO.builder()
