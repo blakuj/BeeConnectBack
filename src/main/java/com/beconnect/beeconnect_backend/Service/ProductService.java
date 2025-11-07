@@ -133,6 +133,21 @@ public class ProductService {
     }
 
 
+    @Transactional
+    public void deleteProduct(Long id) {
+        Person currentUser = personService.getProfile();
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getSeller().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You don't have permission to delete this product");
+        }
+
+        productRepository.delete(product);
+    }
+
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
