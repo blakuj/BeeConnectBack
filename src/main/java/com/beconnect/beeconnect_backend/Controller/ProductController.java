@@ -81,4 +81,16 @@ public class ProductController {
         }
     }
 
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ProductDTO>> getMyProducts() {
+        try {
+            List<ProductDTO> products = productService.getMyProducts();
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
+
+
 }
