@@ -114,4 +114,16 @@ public class ProductController {
         }
     }
 
+    @PostMapping
+    public ResponseEntity<?> addProduct(@RequestBody CreateProductDTO dto) {
+        try {
+            ProductDTO product = productService.addProduct(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(product);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
 }
