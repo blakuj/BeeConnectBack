@@ -71,6 +71,40 @@ public class ProductService {
     }
 
 
+    @Transactional
+    public ProductDTO addProduct(CreateProductDTO dto) {
+        Person seller = personService.getProfile();
+
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new RuntimeException("Product name is required");
+        }
+        if (dto.getPrice() == null || dto.getPrice() <= 0) {
+            throw new RuntimeException("Price must be greater than 0");
+        }
+        if (dto.getStock() == null || dto.getStock() < 0) {
+            throw new RuntimeException("Stock cannot be negative");
+        }
+
+        Product product = Product.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .price(dto.getPrice())
+                .category(dto.getCategory())
+                .imageBase64(dto.getImageBase64())
+                .stock(dto.getStock())
+                .available(true)
+                .rating(0.0)
+                .reviewCount(0)
+                .seller(seller)
+                .location(dto.getLocation())
+                .weight(dto.getWeight())
+                .weightUnit(dto.getWeightUnit())
+                .build();
+
+        product = productRepository.save(product);
+        return mapToDTO(product);
+    }
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
