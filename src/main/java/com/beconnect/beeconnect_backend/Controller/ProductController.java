@@ -69,4 +69,16 @@ public class ProductController {
     }
 
 
+    @GetMapping("/price-range")
+    public ResponseEntity<List<ProductDTO>> getProductsByPriceRange(
+            @RequestParam Double min,
+            @RequestParam Double max) {
+        try {
+            List<ProductDTO> products = productService.getProductsByPriceRange(min, max);
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
