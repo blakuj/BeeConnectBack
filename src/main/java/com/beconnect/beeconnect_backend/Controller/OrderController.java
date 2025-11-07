@@ -28,4 +28,15 @@ public class OrderController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+
+    @GetMapping("/my-purchases")
+    public ResponseEntity<List<OrderDTO>> getMyPurchases() {
+        try {
+            List<OrderDTO> orders = orderService.getMyPurchases();
+            return ResponseEntity.ok(orders);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+    }
 }
