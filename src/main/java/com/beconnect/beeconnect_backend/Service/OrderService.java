@@ -31,6 +31,68 @@ public class OrderService {
     @Autowired
     private PersonService personService;
 
+    @Transactional
+    public OrderDTO createOrder(CreateOrderDTO dto) {
+        Person buyer = personService.getProfile();
+
+        if (dto.getQuantity() == null || dto.getQuantity() <= 0) {
+            throw new RuntimeException("Quantity must be greater than 0");
+        }
+
+        Product product = productRepository.findById(dto.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getAvailable()) {
+            throw new RuntimeException("Product is not available");
+        }
+
+        if (product.getStock() < dto.getQuantity()) {
+            throw new RuntimeException("Insufficient stock. Available: " + product.getStock());
+        }
+
+        if (product.getSeller().getId().equals(buyer.getId())) {
+            throw new RuntimeException("You cannot buy your own product");
+        }
+
+        double totalPrice = product.getPrice() * dto.getQuantity();
+        System.out.println(totalPrice);
+        System.out.println(dto.getQuantity());
+        if (buyer.getBalance() < totalPrice) {
+            throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + buyer.getBalance() + " PLN");
+        }
+
+        buyer.setBalance((float) (buyer.getBalance() - totalPrice));
+        personRepository.save(buyer);
+
+        Person seller = product.getSeller();
+        seller.setBalance((float) (seller.getBalance() + totalPrice));
+        personRepository.save(seller);
+
+        product.setStock(product.getStock() - dto.getQuantity());
+
+        if (product.getStock() == 0) {
+            product.setAvailable(false);
+        }
+
+        productRepository.save(product);
+
+        Order order = Order.builder()
+                .buyer(buyer)
+                .seller(seller)
+                .product(product)
+                .quantity(dto.getQuantity())
+                .pricePerUnit(product.getPrice())
+                .totalPrice(totalPrice)
+                .status(OrderStatus.COMPLETED)
+                .deliveryAddress(dto.getDeliveryAddress())
+                .buyerNotes(dto.getBuyerNotes())
+                .build();
+
+        order = orderRepository.save(order);
+
+        return mapToDTO(order);
+    }
+
     private OrderDTO mapToDTO(Order order) {
         return OrderDTO.builder()
                 .id(order.getId())
