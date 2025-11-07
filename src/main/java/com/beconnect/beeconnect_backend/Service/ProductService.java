@@ -148,6 +148,22 @@ public class ProductService {
     }
 
 
+    @Transactional
+    public ProductDTO toggleAvailability(Long id) {
+        Person currentUser = personService.getProfile();
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getSeller().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You don't have permission to modify this product");
+        }
+
+        product.setAvailable(!product.getAvailable());
+        product = productRepository.save(product);
+        return mapToDTO(product);
+    }
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
