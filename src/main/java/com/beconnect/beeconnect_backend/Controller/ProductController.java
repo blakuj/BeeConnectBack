@@ -149,6 +149,15 @@ public class ProductController {
         }
     }
 
-
+    @PutMapping("/{id}/toggle-availability")
+    public ResponseEntity<?> toggleAvailability(@PathVariable Long id) {
+        try {
+            ProductDTO product = productService.toggleAvailability(id);
+            return ResponseEntity.ok(product);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 
 }
