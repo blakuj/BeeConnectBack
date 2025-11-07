@@ -93,4 +93,14 @@ public class ProductController {
     }
 
 
+    @GetMapping("/recent")
+    public ResponseEntity<List<ProductDTO>> getRecentProducts() {
+        try {
+            List<ProductDTO> products = productService.getRecentProducts();
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
