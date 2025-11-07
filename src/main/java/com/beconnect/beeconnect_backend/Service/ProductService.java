@@ -23,6 +23,21 @@ public class ProductService {
     @Autowired
     private PersonService personService;
 
+
+    public List<ProductDTO> getAllProducts() {
+        List<Product> products = productRepository.findByAvailableTrue();
+        return products.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    public ProductDTO getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return mapToDTO(product);
+    }
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
