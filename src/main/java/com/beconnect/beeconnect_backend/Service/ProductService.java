@@ -54,6 +54,23 @@ public class ProductService {
     }
 
 
+    public List<ProductDTO> getProductsByPriceRange(Double minPrice, Double maxPrice) {
+        List<Product> products = productRepository.findByPriceRange(minPrice, maxPrice);
+        return products.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    public List<ProductDTO> getMyProducts() {
+        Person seller = personService.getProfile();
+        List<Product> products = productRepository.findBySeller(seller);
+        return products.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
