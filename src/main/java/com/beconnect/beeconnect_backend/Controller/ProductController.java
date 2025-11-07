@@ -57,4 +57,16 @@ public class ProductController {
         }
     }
 
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductDTO>> searchProducts(@RequestParam String q) {
+        try {
+            List<ProductDTO> products = productService.searchProducts(q);
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
 }
