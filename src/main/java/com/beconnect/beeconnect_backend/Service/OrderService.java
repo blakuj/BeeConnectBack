@@ -129,7 +129,22 @@ public class OrderService {
     }
 
 
+    public List<OrderDTO> getAllMyOrders() {
+        Person user = personService.getProfile();
 
+        List<Order> purchases = orderRepository.findByBuyer(user);
+        List<Order> sales = orderRepository.findBySeller(user);
+
+        List<Order> allOrders = new java.util.ArrayList<>(purchases);
+        allOrders.addAll(sales);
+
+        allOrders.sort((o1, o2) -> o2.getOrderedAt().compareTo(o1.getOrderedAt()));
+
+        return allOrders.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+    
 
     private OrderDTO mapToDTO(Order order) {
         return OrderDTO.builder()
