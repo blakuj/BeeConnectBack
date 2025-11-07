@@ -126,4 +126,16 @@ public class ProductController {
     }
 
 
+    @PutMapping
+    public ResponseEntity<?> updateProduct(@RequestBody UpdateProductDTO dto) {
+        try {
+            ProductDTO product = productService.updateProduct(dto);
+            return ResponseEntity.ok(product);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
 }
