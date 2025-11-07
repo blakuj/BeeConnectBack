@@ -103,4 +103,15 @@ public class ProductController {
         }
     }
 
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<ProductDTO>> getPopularProducts() {
+        try {
+            List<ProductDTO> products = productService.getPopularProducts();
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
