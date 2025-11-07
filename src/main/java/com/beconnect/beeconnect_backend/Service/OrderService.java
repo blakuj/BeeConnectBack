@@ -93,6 +93,15 @@ public class OrderService {
         return mapToDTO(order);
     }
 
+
+    public List<OrderDTO> getMyPurchases() {
+        Person buyer = personService.getProfile();
+        List<Order> orders = orderRepository.findRecentOrdersByBuyer(buyer);
+        return orders.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private OrderDTO mapToDTO(Order order) {
         return OrderDTO.builder()
                 .id(order.getId())
