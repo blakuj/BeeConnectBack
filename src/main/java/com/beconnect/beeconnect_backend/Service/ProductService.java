@@ -164,6 +164,24 @@ public class ProductService {
         return mapToDTO(product);
     }
 
+
+    public List<ProductDTO> getRecentProducts() {
+        List<Product> products = productRepository.findRecentProducts();
+        return products.stream()
+                .limit(20)
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    public List<ProductDTO> getPopularProducts() {
+        List<Product> products = productRepository.findPopularProducts();
+        return products.stream()
+                .limit(20)
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
