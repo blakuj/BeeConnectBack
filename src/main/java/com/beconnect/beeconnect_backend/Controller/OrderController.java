@@ -59,4 +59,15 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getOrderById(@PathVariable Long id) {
+        try {
+            OrderDTO order = orderService.getOrderById(id);
+            return ResponseEntity.ok(order);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }
