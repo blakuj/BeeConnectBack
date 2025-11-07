@@ -105,6 +105,34 @@ public class ProductService {
         return mapToDTO(product);
     }
 
+
+    @Transactional
+    public ProductDTO updateProduct(UpdateProductDTO dto) {
+        Person currentUser = personService.getProfile();
+
+        Product product = productRepository.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getSeller().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You don't have permission to edit this product");
+        }
+
+        if (dto.getName() != null) product.setName(dto.getName());
+        if (dto.getDescription() != null) product.setDescription(dto.getDescription());
+        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+        if (dto.getCategory() != null) product.setCategory(dto.getCategory());
+        if (dto.getImageBase64() != null) product.setImageBase64(dto.getImageBase64());
+        if (dto.getStock() != null) product.setStock(dto.getStock());
+        if (dto.getAvailable() != null) product.setAvailable(dto.getAvailable());
+        if (dto.getLocation() != null) product.setLocation(dto.getLocation());
+        if (dto.getWeight() != null) product.setWeight(dto.getWeight());
+        if (dto.getWeightUnit() != null) product.setWeightUnit(dto.getWeightUnit());
+
+        product = productRepository.save(product);
+        return mapToDTO(product);
+    }
+
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
