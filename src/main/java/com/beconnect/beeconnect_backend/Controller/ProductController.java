@@ -43,4 +43,18 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/category/{category}")
+    public ResponseEntity<?> getProductsByCategory(@PathVariable String category) {
+        try {
+            ProductCategory categoryEnum = ProductCategory.valueOf(category.toUpperCase());
+            List<ProductDTO> products = productService.getProductsByCategory(categoryEnum);
+            return ResponseEntity.ok(products);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid category"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
