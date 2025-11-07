@@ -38,6 +38,22 @@ public class ProductService {
         return mapToDTO(product);
     }
 
+    public List<ProductDTO> getProductsByCategory(ProductCategory category) {
+        List<Product> products = productRepository.findByCategoryAndAvailableTrue(category);
+        return products.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    public List<ProductDTO> searchProducts(String searchTerm) {
+        List<Product> products = productRepository.searchByName(searchTerm);
+        return products.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())
