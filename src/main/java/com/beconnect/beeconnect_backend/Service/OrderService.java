@@ -32,6 +32,9 @@ public class OrderService {
     @Autowired
     private PersonService personService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Utwórz zamówienie (kup produkt)
      */
@@ -106,6 +109,14 @@ public class OrderService {
 
         order = orderRepository.save(order);
 
+        Person currentUser = personService.getProfile();
+
+        notificationService.notifyNewOrder(
+                product.getSeller().getId(),
+                product.getName(),
+                currentUser.getFirstname() + " " + currentUser.getLastname(),
+                order.getId()
+        );
         return mapToDTO(order);
     }
 
