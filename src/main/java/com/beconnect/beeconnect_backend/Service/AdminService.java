@@ -41,6 +41,9 @@ public class AdminService {
     @Autowired
     private PersonService personService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Pobierz statystyki dla dashboardu
      */
@@ -113,12 +116,15 @@ public class AdminService {
         verification.setReviewedDate(LocalDateTime.now());
         verification.setReviewedBy(admin.getEmail());
 
-        // Jeśli zatwierdzono - zmień rolę użytkownika na BEEKEEPER
+        Person person = verification.getPerson();
         if (decision.getApproved()) {
-            Person person = verification.getPerson();
+
             person.setRole(Role.BEEKEEPER);
             personRepository.save(person);
-        }
+
+            notificationService.notifyBeekeeperVerified(person.getId());
+        }else
+            notificationService.notifyBeekeeperRejected(person.getId(), decision.getComment());
 
         verificationRepository.save(verification);
     }
