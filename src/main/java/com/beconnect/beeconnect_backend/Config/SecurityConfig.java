@@ -30,9 +30,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
             throws Exception {
-            http
+        http
                 .csrf(csrf -> csrf.disable())
-                    .cors(c -> corsConfigurationSource())
+                .cors(c -> corsConfigurationSource())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -41,8 +41,12 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/api/auth/**",
                                 "/api/areas/**",
-                                "/api/reservations/**"
-                        ).permitAll()
+                                "/api/reservations/**",
+                                "/api/person/**",
+                                "/api/products/**"
+
+
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -52,7 +56,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(asList("http://localhost:63343")); //do zmiany lokalnie
+        configuration.setAllowedOrigins(asList("http://localhost:63343","https://beeconnect.ksrtk.myds.me/")); //do zmiany lokalnie
         configuration.setAllowedMethods(asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(asList("Authorization", "Content-Type"));
@@ -61,5 +65,3 @@ public class SecurityConfig {
         return source;
     }
 }
-
-

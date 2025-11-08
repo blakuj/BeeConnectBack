@@ -20,8 +20,10 @@ public class DashboardStatsDTO {
     private long availableAreas;          // Dostępne obszary
     private long reservedAreas;           // Zarezerwowane obszary
 
-    // Statystyki produktów (TODO - gdy dodamy moduł produktów)
-    private long totalProducts;
+    // Statystyki produktów (marketplace)
+    private long totalProducts;           // Wszystkie produkty
+    private long totalOrders;             // Wszystkie zamówienia
+    private long completedOrders;         // Zakończone zamówienia
 
     // Dodatkowe metryki
     private long adminsCount;             // Liczba adminów
