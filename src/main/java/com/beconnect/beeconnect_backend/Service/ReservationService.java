@@ -192,6 +192,7 @@ public class ReservationService {
     /**
      * Pobierz rezerwacje dla obszarów użytkownika (jako właściciel)
      */
+
     public List<ReservationResponseDTO> getReservationsForMyAreas() {
         Person owner = personService.getProfile();
         List<Area> myAreas = areaRepository.findByOwner(owner);

@@ -9,22 +9,19 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class DashboardStatsDTO {
-    // Statystyki użytkowników
-    private long totalUsers;              // Wszyscy zarejestrowani
-    private long verifiedBeekeepers;      // Zweryfikowani pszczelarze (BEEKEEPER)
-    private long pendingVerifications;    // Oczekujące wnioski
-    private long rejectedVerifications;   // Odrzucone wnioski
+    private long totalUsers;
+    private long verifiedBeekeepers;
+    private long pendingVerifications;
+    private long rejectedVerifications;
 
-    // Statystyki obszarów
-    private long totalAreas;              // Wszystkie obszary
-    private long availableAreas;          // Dostępne obszary
-    private long reservedAreas;           // Zarezerwowane obszary
+    private long totalAreas;
+    private long availableAreas;
+    private long reservedAreas;
 
     // Statystyki produktów (marketplace)
     private long totalProducts;           // Wszystkie produkty
     private long totalOrders;             // Wszystkie zamówienia
     private long completedOrders;         // Zakończone zamówienia
 
-    // Dodatkowe metryki
-    private long adminsCount;             // Liczba adminów
+    private long adminsCount;
 }

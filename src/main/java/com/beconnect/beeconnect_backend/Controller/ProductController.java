@@ -139,10 +139,6 @@ public class ProductController {
         }
     }
 
-    /**
-     * POST /api/products
-     * Dodaj nowy produkt
-     */
     @PostMapping
     public ResponseEntity<?> addProduct(@RequestBody CreateProductDTO dto) {
         try {
@@ -158,6 +154,7 @@ public class ProductController {
      * PUT /api/products
      * Aktualizuj produkt
      */
+
     @PutMapping
     public ResponseEntity<?> updateProduct(@RequestBody UpdateProductDTO dto) {
         try {
