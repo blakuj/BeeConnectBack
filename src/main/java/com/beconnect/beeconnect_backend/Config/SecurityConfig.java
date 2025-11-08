@@ -43,8 +43,10 @@ public class SecurityConfig {
                                 "/api/areas/**",
                                 "/api/reservations/**",
                                 "/api/person/**",
-                                "/api/products/**"
-
+                                "/api/products/**",
+                                "/api/orders/**",
+                                "/api/chat/**",
+                                "/api/notifications/**"
 
                                 ).permitAll()
                         .anyRequest().authenticated()
