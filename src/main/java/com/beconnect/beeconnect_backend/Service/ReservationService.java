@@ -35,6 +35,9 @@ public class ReservationService {
     @Autowired
     private PersonService personService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Utwórz i NATYCHMIAST POTWIERDŹ rezerwację (uproszczony proces)
      */
@@ -110,6 +113,14 @@ public class ReservationService {
 
         reservation = reservationRepository.save(reservation);
 
+        Person currentUser = personService.getProfile();
+
+        notificationService.notifyAreaReserved(
+                area.getOwner().getId(),
+                area.getName(),
+                currentUser.getFirstname() + " " + currentUser.getLastname(),
+                reservation.getId()
+        );
         // Zaktualizuj status obszaru na UNAVAILABLE
         area.setTenant(tenant);
         area.setAvailabilityStatus(AvailabilityStatus.UNAVAILABLE);
