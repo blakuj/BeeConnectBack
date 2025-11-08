@@ -23,7 +23,9 @@ public class ProductService {
     @Autowired
     private PersonService personService;
 
-
+    /**
+     * Pobierz wszystkie dostępne produkty
+     */
     public List<ProductDTO> getAllProducts() {
         List<Product> products = productRepository.findByAvailableTrue();
         return products.stream()
@@ -31,13 +33,18 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz produkt według ID
+     */
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         return mapToDTO(product);
     }
 
+    /**
+     * Pobierz produkty według kategorii
+     */
     public List<ProductDTO> getProductsByCategory(ProductCategory category) {
         List<Product> products = productRepository.findByCategoryAndAvailableTrue(category);
         return products.stream()
@@ -45,7 +52,9 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Wyszukaj produkty po nazwie
+     */
     public List<ProductDTO> searchProducts(String searchTerm) {
         List<Product> products = productRepository.searchByName(searchTerm);
         return products.stream()
@@ -53,7 +62,9 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz produkty w przedziale cenowym
+     */
     public List<ProductDTO> getProductsByPriceRange(Double minPrice, Double maxPrice) {
         List<Product> products = productRepository.findByPriceRange(minPrice, maxPrice);
         return products.stream()
@@ -61,7 +72,9 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz produkty zalogowanego użytkownika (sprzedawcy)
+     */
     public List<ProductDTO> getMyProducts() {
         Person seller = personService.getProfile();
         List<Product> products = productRepository.findBySeller(seller);
@@ -70,11 +83,14 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Dodaj nowy produkt
+     */
     @Transactional
     public ProductDTO addProduct(CreateProductDTO dto) {
         Person seller = personService.getProfile();
 
+        // Walidacja
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             throw new RuntimeException("Product name is required");
         }
@@ -105,7 +121,9 @@ public class ProductService {
         return mapToDTO(product);
     }
 
-
+    /**
+     * Aktualizuj produkt
+     */
     @Transactional
     public ProductDTO updateProduct(UpdateProductDTO dto) {
         Person currentUser = personService.getProfile();
@@ -113,10 +131,12 @@ public class ProductService {
         Product product = productRepository.findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Sprawdź, czy użytkownik jest właścicielem produktu
         if (!product.getSeller().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You don't have permission to edit this product");
         }
 
+        // Aktualizuj pola
         if (dto.getName() != null) product.setName(dto.getName());
         if (dto.getDescription() != null) product.setDescription(dto.getDescription());
         if (dto.getPrice() != null) product.setPrice(dto.getPrice());
@@ -132,7 +152,9 @@ public class ProductService {
         return mapToDTO(product);
     }
 
-
+    /**
+     * Usuń produkt
+     */
     @Transactional
     public void deleteProduct(Long id) {
         Person currentUser = personService.getProfile();
@@ -140,6 +162,7 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Sprawdź, czy użytkownik jest właścicielem produktu
         if (!product.getSeller().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You don't have permission to delete this product");
         }
@@ -147,7 +170,9 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-
+    /**
+     * Zmień dostępność produktu
+     */
     @Transactional
     public ProductDTO toggleAvailability(Long id) {
         Person currentUser = personService.getProfile();
@@ -155,6 +180,7 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Sprawdź, czy użytkownik jest właścicielem produktu
         if (!product.getSeller().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You don't have permission to modify this product");
         }
@@ -164,7 +190,9 @@ public class ProductService {
         return mapToDTO(product);
     }
 
-
+    /**
+     * Pobierz najnowsze produkty
+     */
     public List<ProductDTO> getRecentProducts() {
         List<Product> products = productRepository.findRecentProducts();
         return products.stream()
@@ -173,7 +201,9 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz najpopularniejsze produkty
+     */
     public List<ProductDTO> getPopularProducts() {
         List<Product> products = productRepository.findPopularProducts();
         return products.stream()
@@ -182,6 +212,9 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Mapowanie Product → ProductDTO
+     */
     private ProductDTO mapToDTO(Product product) {
         return ProductDTO.builder()
                 .id(product.getId())

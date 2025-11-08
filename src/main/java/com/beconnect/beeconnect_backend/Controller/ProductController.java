@@ -20,7 +20,10 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-
+    /**
+     * GET /api/products
+     * Pobierz wszystkie dostępne produkty
+     */
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
         try {
@@ -31,7 +34,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * GET /api/products/{id}
+     * Pobierz produkt według ID
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable Long id) {
         try {
@@ -43,6 +49,10 @@ public class ProductController {
         }
     }
 
+    /**
+     * GET /api/products/category/{category}
+     * Pobierz produkty według kategorii
+     */
     @GetMapping("/category/{category}")
     public ResponseEntity<?> getProductsByCategory(@PathVariable String category) {
         try {
@@ -57,7 +67,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * GET /api/products/search?q={searchTerm}
+     * Wyszukaj produkty po nazwie
+     */
     @GetMapping("/search")
     public ResponseEntity<List<ProductDTO>> searchProducts(@RequestParam String q) {
         try {
@@ -68,7 +81,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * GET /api/products/price-range?min={minPrice}&max={maxPrice}
+     * Pobierz produkty w przedziale cenowym
+     */
     @GetMapping("/price-range")
     public ResponseEntity<List<ProductDTO>> getProductsByPriceRange(
             @RequestParam Double min,
@@ -81,7 +97,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * GET /api/products/my
+     * Pobierz produkty zalogowanego użytkownika
+     */
     @GetMapping("/my")
     public ResponseEntity<List<ProductDTO>> getMyProducts() {
         try {
@@ -92,7 +111,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * GET /api/products/recent
+     * Pobierz najnowsze produkty
+     */
     @GetMapping("/recent")
     public ResponseEntity<List<ProductDTO>> getRecentProducts() {
         try {
@@ -103,7 +125,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * GET /api/products/popular
+     * Pobierz najpopularniejsze produkty
+     */
     @GetMapping("/popular")
     public ResponseEntity<List<ProductDTO>> getPopularProducts() {
         try {
@@ -125,6 +150,10 @@ public class ProductController {
         }
     }
 
+    /**
+     * PUT /api/products
+     * Aktualizuj produkt
+     */
 
     @PutMapping
     public ResponseEntity<?> updateProduct(@RequestBody UpdateProductDTO dto) {
@@ -137,7 +166,10 @@ public class ProductController {
         }
     }
 
-
+    /**
+     * DELETE /api/products/{id}
+     * Usuń produkt
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
@@ -149,6 +181,10 @@ public class ProductController {
         }
     }
 
+    /**
+     * PUT /api/products/{id}/toggle-availability
+     * Zmień dostępność produktu
+     */
     @PutMapping("/{id}/toggle-availability")
     public ResponseEntity<?> toggleAvailability(@PathVariable Long id) {
         try {
@@ -159,5 +195,4 @@ public class ProductController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-
 }

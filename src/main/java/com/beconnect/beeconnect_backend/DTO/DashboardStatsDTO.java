@@ -18,9 +18,10 @@ public class DashboardStatsDTO {
     private long availableAreas;
     private long reservedAreas;
 
-    private long totalProducts;
-    private long totalOrders;
-    private long completedOrders;
+    // Statystyki produktów (marketplace)
+    private long totalProducts;           // Wszystkie produkty
+    private long totalOrders;             // Wszystkie zamówienia
+    private long completedOrders;         // Zakończone zamówienia
 
     private long adminsCount;
 }

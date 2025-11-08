@@ -31,51 +31,66 @@ public class OrderService {
     @Autowired
     private PersonService personService;
 
+    /**
+     * Utwórz zamówienie (kup produkt)
+     */
     @Transactional
     public OrderDTO createOrder(CreateOrderDTO dto) {
         Person buyer = personService.getProfile();
 
+        // Walidacja
         if (dto.getQuantity() == null || dto.getQuantity() <= 0) {
             throw new RuntimeException("Quantity must be greater than 0");
         }
 
+        // Pobierz produkt
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Sprawdź dostępność
         if (!product.getAvailable()) {
             throw new RuntimeException("Product is not available");
         }
 
+        // Sprawdź stock
         if (product.getStock() < dto.getQuantity()) {
             throw new RuntimeException("Insufficient stock. Available: " + product.getStock());
         }
 
+        // Sprawdź czy użytkownik nie kupuje własnego produktu
         if (product.getSeller().getId().equals(buyer.getId())) {
             throw new RuntimeException("You cannot buy your own product");
         }
 
+        // Oblicz cenę
         double totalPrice = product.getPrice() * dto.getQuantity();
         System.out.println(totalPrice);
         System.out.println(dto.getQuantity());
+        // Sprawdź saldo kupującego
         if (buyer.getBalance() < totalPrice) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + buyer.getBalance() + " PLN");
         }
 
+        // Pobierz środki od kupującego
         buyer.setBalance((float) (buyer.getBalance() - totalPrice));
         personRepository.save(buyer);
 
+        // Dodaj środki sprzedawcy
         Person seller = product.getSeller();
         seller.setBalance((float) (seller.getBalance() + totalPrice));
         personRepository.save(seller);
 
+        // Zmniejsz stock produktu
         product.setStock(product.getStock() - dto.getQuantity());
 
+        // Jeśli stock = 0, ustaw available na false
         if (product.getStock() == 0) {
             product.setAvailable(false);
         }
 
         productRepository.save(product);
 
+        // Utwórz zamówienie
         Order order = Order.builder()
                 .buyer(buyer)
                 .seller(seller)
@@ -93,7 +108,9 @@ public class OrderService {
         return mapToDTO(order);
     }
 
-
+    /**
+     * Pobierz historię zakupów zalogowanego użytkownika
+     */
     public List<OrderDTO> getMyPurchases() {
         Person buyer = personService.getProfile();
         List<Order> orders = orderRepository.findRecentOrdersByBuyer(buyer);
@@ -102,7 +119,9 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz historię sprzedaży zalogowanego użytkownika
+     */
     public List<OrderDTO> getMySales() {
         Person seller = personService.getProfile();
         List<Order> orders = orderRepository.findRecentOrdersBySeller(seller);
@@ -111,13 +130,16 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Pobierz szczegóły zamówienia
+     */
     public OrderDTO getOrderById(Long id) {
         Person currentUser = personService.getProfile();
 
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        // Sprawdź uprawnienia (tylko kupujący lub sprzedający mogą zobaczyć zamówienie)
         boolean isBuyer = order.getBuyer().getId().equals(currentUser.getId());
         boolean isSeller = order.getSeller().getId().equals(currentUser.getId());
 
@@ -128,7 +150,9 @@ public class OrderService {
         return mapToDTO(order);
     }
 
-
+    /**
+     * Pobierz wszystkie zamówienia użytkownika (kupione + sprzedane)
+     */
     public List<OrderDTO> getAllMyOrders() {
         Person user = personService.getProfile();
 
@@ -138,14 +162,17 @@ public class OrderService {
         List<Order> allOrders = new java.util.ArrayList<>(purchases);
         allOrders.addAll(sales);
 
+        // Sortuj po dacie zamówienia (najnowsze pierwsze)
         allOrders.sort((o1, o2) -> o2.getOrderedAt().compareTo(o1.getOrderedAt()));
 
         return allOrders.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
-    
 
+    /**
+     * Mapowanie Order → OrderDTO
+     */
     private OrderDTO mapToDTO(Order order) {
         return OrderDTO.builder()
                 .id(order.getId())

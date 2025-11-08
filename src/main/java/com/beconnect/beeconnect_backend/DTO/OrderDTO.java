@@ -14,21 +14,25 @@ import java.time.LocalDateTime;
 public class OrderDTO {
     private Long id;
 
+    // Informacje o kupującym
     private Long buyerId;
     private String buyerFirstname;
     private String buyerLastname;
     private String buyerEmail;
 
+    // Informacje o sprzedawcy
     private Long sellerId;
     private String sellerFirstname;
     private String sellerLastname;
     private String sellerEmail;
 
+    // Informacje o produkcie
     private Long productId;
     private String productName;
     private String productCategory;
     private String productImage;
 
+    // Szczegóły zamówienia
     private Integer quantity;
     private Double pricePerUnit;
     private Double totalPrice;

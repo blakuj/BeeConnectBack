@@ -18,6 +18,10 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    /**
+     * POST /api/orders
+     * Utwórz zamówienie (kup produkt)
+     */
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody CreateOrderDTO dto) {
         try {
@@ -29,7 +33,10 @@ public class OrderController {
         }
     }
 
-
+    /**
+     * GET /api/orders/my-purchases
+     * Pobierz historię zakupów zalogowanego użytkownika
+     */
     @GetMapping("/my-purchases")
     public ResponseEntity<List<OrderDTO>> getMyPurchases() {
         try {
@@ -40,6 +47,10 @@ public class OrderController {
         }
     }
 
+    /**
+     * GET /api/orders/my-sales
+     * Pobierz historię sprzedaży zalogowanego użytkownika
+     */
     @GetMapping("/my-sales")
     public ResponseEntity<List<OrderDTO>> getMySales() {
         try {
@@ -50,6 +61,10 @@ public class OrderController {
         }
     }
 
+    /**
+     * GET /api/orders/my
+     * Pobierz wszystkie zamówienia użytkownika (kupione + sprzedane)
+     */
     @GetMapping("/my")
     public ResponseEntity<List<OrderDTO>> getAllMyOrders() {
         try {
@@ -60,6 +75,10 @@ public class OrderController {
         }
     }
 
+    /**
+     * GET /api/orders/{id}
+     * Pobierz szczegóły zamówienia
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable Long id) {
         try {

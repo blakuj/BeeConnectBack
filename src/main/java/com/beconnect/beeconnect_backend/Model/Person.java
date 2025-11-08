@@ -40,6 +40,7 @@ public class Person {
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     private List<Area> ownedAreas;
 
+    // Nowe relacje dla marketplace
     @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Product> sellingProducts = new ArrayList<>();
 

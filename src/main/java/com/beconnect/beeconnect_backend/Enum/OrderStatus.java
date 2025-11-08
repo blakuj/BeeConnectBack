@@ -1,11 +1,11 @@
 package com.beconnect.beeconnect_backend.Enum;
 
 public enum OrderStatus {
-    PENDING,
-    CONFIRMED,
-    PROCESSING,
-    SHIPPED,
-    DELIVERED,
-    COMPLETED,
-    CANCELLED
+    PENDING,      // Oczekujące
+    CONFIRMED,    // Potwierdzone
+    PROCESSING,   // W trakcie realizacji
+    SHIPPED,      // Wysłane
+    DELIVERED,    // Dostarczone
+    COMPLETED,    // Zakończone
+    CANCELLED     // Anulowane
 }

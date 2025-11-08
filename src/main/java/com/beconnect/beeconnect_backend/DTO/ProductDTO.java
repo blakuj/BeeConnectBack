@@ -25,11 +25,13 @@ public class ProductDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // Dane sprzedawcy
     private Long sellerId;
     private String sellerFirstname;
     private String sellerLastname;
     private String sellerEmail;
 
+    // Dodatkowe informacje
     private String location;
     private Double weight;
     private String weightUnit;

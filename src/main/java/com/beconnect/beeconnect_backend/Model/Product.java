@@ -50,14 +50,18 @@ public class Product {
     @Column
     private LocalDateTime updatedAt;
 
+    // Relacja Many-to-One z Person (sprzedawca)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private Person seller;
 
+    // Opcjonalnie: lokalizacja produktu
     private String location;
 
+    // Waga produktu (dla miodu w kg, dla innych w gramach)
     private Double weight;
 
+    // Jednostka wagi
     private String weightUnit;
 
     @PrePersist
