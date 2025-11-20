@@ -52,6 +52,10 @@ public class Order {
 
     private String buyerNotes;
 
+    // Relacja do opinii
+    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private ProductReview review;
+
     @PrePersist
     protected void onCreate() {
         orderedAt = LocalDateTime.now();

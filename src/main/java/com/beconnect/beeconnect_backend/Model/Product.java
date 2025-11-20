@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -40,7 +42,7 @@ public class Product {
     @Column(nullable = false)
     private Boolean available = true;
 
-    private Double rating;
+    private Double rating = 0.0;
 
     private Integer reviewCount = 0;
 
@@ -64,10 +66,16 @@ public class Product {
     // Jednostka wagi
     private String weightUnit;
 
+    // Relacja do opinii
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ProductReview> reviews = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (rating == null) rating = 0.0;
+        if (reviewCount == null) reviewCount = 0;
     }
 
     @PreUpdate

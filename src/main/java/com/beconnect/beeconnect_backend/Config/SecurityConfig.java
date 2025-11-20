@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/api/products/**",
                                 "/api/orders/**",
                                 "/api/chat/**",
-                                "/api/notifications/**"
+                                "/api/notifications/**",
+                                "/api/reviews/**"
 
                                 ).permitAll()
                         .anyRequest().authenticated()

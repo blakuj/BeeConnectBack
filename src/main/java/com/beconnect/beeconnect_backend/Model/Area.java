@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,7 +26,6 @@ public class Area {
     @Column(name = "coordinate")
     private List<String> coordinates;
 
-
     private double area;
 
     private String description;
@@ -40,7 +40,6 @@ public class Area {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
-
     private Person owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -54,4 +53,12 @@ public class Area {
     private String imgBase64;
 
     private String name;
+
+    // Rating fields
+    private Double averageRating = 0.0;
+    private Integer reviewCount = 0;
+
+    // Relacja do opinii
+    @OneToMany(mappedBy = "area", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<AreaReview> reviews = new ArrayList<>();
 }
