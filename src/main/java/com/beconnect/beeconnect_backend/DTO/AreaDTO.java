@@ -11,6 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+
+@Builder
 public class AreaDTO {
     private Long id;
     private String type;
@@ -26,5 +28,11 @@ public class AreaDTO {
     private LocalDate availableFrom ;
     private String imgBase64;
 
+
     private String name;
+    private Double averageRating;
+    private Integer reviewCount;
+    private Long reservationId;
+
+
 }

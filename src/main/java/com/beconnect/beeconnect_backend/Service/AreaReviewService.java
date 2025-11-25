@@ -60,9 +60,9 @@ public class AreaReviewService {
         }
 
         // Sprawdź czy rezerwacja już się zakończyła (endDate minęła)
-        if (reservation.getEndDate().isAfter(LocalDate.now())) {
-            throw new RuntimeException("You can only review reservations that have ended");
-        }
+//        if (reservation.getEndDate().isAfter(LocalDate.now())) {
+//            throw new RuntimeException("You can only review reservations that have ended");
+//        }
 
         // Sprawdź czy już nie wystawiono opinii
         if (reviewRepository.existsByReservation(reservation)) {
@@ -129,9 +129,9 @@ public class AreaReviewService {
             return false;
         }
 
-        if (reservation.getEndDate().isAfter(LocalDate.now())) {
-            return false;
-        }
+//        if (reservation.getEndDate().isAfter(LocalDate.now())) {
+//            return false;
+//        }
 
         // Sprawdź czy już nie wystawiono opinii
         return !reviewRepository.existsByReservation(reservation);

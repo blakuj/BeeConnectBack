@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
@@ -18,6 +19,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // Znajdź rezerwacje według statusu dla użytkownika
     List<Reservation> findByTenantAndStatus(Person tenant, ReservationStatus status);
+
+    Optional<Reservation> findByAreaAndTenant(Area area, Person tenant);
 
     // Znajdź wszystkie rezerwacje dla danego obszaru
     List<Reservation> findByArea(Area area);

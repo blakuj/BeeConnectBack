@@ -5,9 +5,11 @@ import com.beconnect.beeconnect_backend.DTO.EditAreaDTO;
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import com.beconnect.beeconnect_backend.Model.Area;
 import com.beconnect.beeconnect_backend.Model.Person;
+import com.beconnect.beeconnect_backend.Model.Reservation;
 import com.beconnect.beeconnect_backend.Repository.AreaRepository;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
-
+import com.beconnect.beeconnect_backend.Repository.ReservationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,6 +24,9 @@ public class AreaService {
     private final AreaRepository areaRepository;
     private final PersonRepository personRepository;
     private final PersonService personService;
+
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     public AreaService(AreaRepository areaRepository, PersonRepository personRepository, PersonService personService) {
         this.areaRepository = areaRepository;
@@ -59,9 +64,23 @@ public class AreaService {
     }
 
     public List<AreaDTO> getRentedAreas() {
-        return personService.getProfile().getRentedAreas()
+        Person currentUser = personService.getProfile();
+
+        return currentUser.getRentedAreas()
                 .stream()
-                .map(this::mapToDTO)
+                .map(area -> {
+                    AreaDTO dto = this.mapToDTO(area);
+
+                    // Znajdź rezerwację dla tego obszaru i użytkownika
+                    Optional<Reservation> reservationOpt = reservationRepository
+                            .findByAreaAndTenant(area, currentUser);
+
+                    reservationOpt.ifPresent(reservation -> {
+                        dto.setReservationId(reservation.getId());
+                    });
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -91,9 +110,7 @@ public class AreaService {
         toDelete.ifPresent(areaRepository::delete);
     }
 
-
-
-
+    // ✅ POPRAWIONA METODA mapToDTO - używa buildera
     private AreaDTO mapToDTO(Area area) {
         List<List<Double>> coords = area.getCoordinates().stream()
                 .map(s -> {
@@ -102,20 +119,23 @@ public class AreaService {
                 })
                 .collect(Collectors.toList());
 
-        return new AreaDTO(
-                area.getId(),
-                area.getType(),
-                coords,
-                area.getArea(),
-                area.getDescription(),
-                area.getMaxHives(),
-                area.getPricePerDay(),
-                area.getAvailabilityStatus(),
-                area.getOwner().getFirstname() != null ? area.getOwner().getFirstname() : null,
-                area.getOwner().getLastname() != null ? area.getOwner().getLastname() : null,
-                area.getAvailableFrom(),
-                area.getImgBase64(),
-                area.getName()
-        );
+        return AreaDTO.builder()
+                .id(area.getId())
+                .type(area.getType())
+                .coordinates(coords)
+                .area(area.getArea())
+                .description(area.getDescription())
+                .maxHives(area.getMaxHives())
+                .pricePerDay(area.getPricePerDay())
+                .status(AvailabilityStatus.valueOf(area.getAvailabilityStatus().toString()))
+                .ownerFirstName(area.getOwner().getFirstname())
+                .ownerLastName(area.getOwner().getLastname())
+                .availableFrom(area.getAvailableFrom())
+                .imgBase64(area.getImgBase64())
+                .name(area.getName())
+                .averageRating(area.getAverageRating() != null ? area.getAverageRating() : 0.0)
+                .reviewCount(area.getReviewCount() != null ? area.getReviewCount() : 0)
+                .build();
+        // reservationId zostanie ustawione później w getRentedAreas()
     }
 }
