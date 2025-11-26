@@ -23,6 +23,9 @@ public class ProductService {
     @Autowired
     private PersonService personService;
 
+    @Autowired
+    private BadgeService badgeService;
+
     /**
      * Pobierz wszystkie dostępne produkty
      */
@@ -118,6 +121,13 @@ public class ProductService {
                 .build();
 
         product = productRepository.save(product);
+        try {
+            badgeService.checkAndAwardBadges(personService.getProfile().getId());
+        } catch (Exception e) {
+            // Loguj błąd, ale nie przerywaj operacji dodawania produktu
+            System.err.println("Error checking badges: " + e.getMessage());
+        }
+
         return mapToDTO(product);
     }
 
