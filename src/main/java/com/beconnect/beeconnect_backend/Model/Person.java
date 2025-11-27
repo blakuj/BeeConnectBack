@@ -13,9 +13,10 @@ import java.util.Set;
 
 @Entity
 @Table(name = "person")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
 public class Person {
     @Id
@@ -69,5 +70,18 @@ public class Person {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Person)) return false;
+        Person person = (Person) o;
+        return id != null && id.equals(person.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

@@ -30,6 +30,7 @@ public class BadgeController {
             List<BadgeDTO> badges = badgeService.getUserBadges(userId);
             return ResponseEntity.ok(badges);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             return ResponseEntity.status(403).body(null);
         }
     }
@@ -44,6 +45,7 @@ public class BadgeController {
             List<BadgeDTO> badges = badgeService.getUserBadges(userId);
             return ResponseEntity.ok(badges);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             return ResponseEntity.status(404).body(null);
         }
     }
@@ -60,6 +62,7 @@ public class BadgeController {
             List<BadgeDTO> badges = badgeService.getUserBadges(userId);
             return ResponseEntity.ok(badges);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             return ResponseEntity.status(403).body(null);
         }
     }

@@ -3,13 +3,12 @@ package com.beconnect.beeconnect_backend.Service;
 import com.beconnect.beeconnect_backend.DTO.BadgeDTO;
 import com.beconnect.beeconnect_backend.Model.*;
 import com.beconnect.beeconnect_backend.Repository.*;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,20 +21,20 @@ public class BadgeService {
     private PersonRepository personRepository;
 
     @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private AreaRepository areaRepository;
-
-    @Autowired
     private ProductReviewRepository productReviewRepository;
 
-    @Autowired
-    private AreaReviewRepository areaReviewRepository;
+    /**
+     * Automatyczna inicjalizacja typów odznak przy starcie aplikacji
+     */
+    @PostConstruct
+    public void init() {
+        initializeDefaultBadges();
+    }
 
     /**
      * Pobierz wszystkie odznaki użytkownika
      */
+    @Transactional(readOnly = true)
     public List<BadgeDTO> getUserBadges(Long personId) {
         Person person = personRepository.findById(personId)
                 .orElseThrow(() -> new RuntimeException("Person not found"));
@@ -46,99 +45,50 @@ public class BadgeService {
     }
 
     /**
-     * Sprawdź i przyznaj wszystkie możliwe odznaki użytkownikowi
+     * GŁÓWNA METODA: Sprawdź i przyznaj odznaki użytkownikowi
      */
     @Transactional
     public void checkAndAwardBadges(Long personId) {
         Person person = personRepository.findById(personId)
                 .orElseThrow(() -> new RuntimeException("Person not found"));
 
-        // Sprawdź każdy typ odznaki
-        checkFrequentSeller(person);
+        // 1. Sprawdź badge "Nowicjusz"
+        checkNewbie(person);
+
+        // 2. Sprawdź badge "Potentat"
+        checkTycoon(person);
+
+        // 3. Sprawdź badge "Zaufany Sprzedawca"
         checkTrustedSeller(person);
-        checkNewStar(person);
-        checkActiveHost(person);
-        checkPerfectService(person);
-        checkVeteran(person);
-        checkTopRated(person);
 
         personRepository.save(person);
     }
 
+    // --- LOGIKA BIZNESOWA ODZNAK ---
+
     /**
-     * Częste nowości - dodanie 5+ produktów w ciągu 30 dni
+     * 1. NEWBIE (Nowicjusz)
+     * Warunek: Posiadaj dodany przynajmniej 1 obszar ALBO 1 produkt.
      */
-    private void checkFrequentSeller(Person person) {
-        String badgeCode = "FREQUENT_SELLER";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return; // Już ma
-        }
+    private void checkNewbie(Person person) {
+        String badgeCode = "NEWBIE";
+        if (hasBadge(person, badgeCode)) return;
 
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        long recentProducts = person.getSellingProducts().stream()
-                .filter(p -> p.getCreatedAt() != null && p.getCreatedAt().isAfter(thirtyDaysAgo))
-                .count();
+        boolean hasAreas = !person.getOwnedAreas().isEmpty();
+        boolean hasProducts = !person.getSellingProducts().isEmpty();
 
-        long recentAreas = person.getOwnedAreas().stream()
-                .filter(a -> a.getAvailableFrom() != null &&
-                        a.getAvailableFrom().atStartOfDay().isAfter(thirtyDaysAgo))
-                .count();
-
-        if (recentProducts + recentAreas >= 5) {
+        if (hasAreas || hasProducts) {
             awardBadge(person, badgeCode);
         }
     }
 
     /**
-     * Zaufany sprzedawca - średnia ocen produktów powyżej 4.5
+     * 2. TYCOON (Potentat)
+     * Warunek: Posiadaj przynajmniej 5 obszarów (ownedAreas).
      */
-    private void checkTrustedSeller(Person person) {
-        String badgeCode = "TRUSTED_SELLER";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return;
-        }
-
-        List<Product> products = person.getSellingProducts();
-        if (products.isEmpty()) return;
-
-        double avgRating = products.stream()
-                .filter(p -> p.getReviewCount() > 0)
-                .mapToDouble(Product::getRating)
-                .average()
-                .orElse(0.0);
-
-        long totalReviews = products.stream()
-                .mapToLong(Product::getReviewCount)
-                .sum();
-
-        if (avgRating >= 4.5 && totalReviews >= 5) {
-            awardBadge(person, badgeCode);
-        }
-    }
-
-    /**
-     * Nowa gwiazda - pierwsze 3 produkty/obszary dodane
-     */
-    private void checkNewStar(Person person) {
-        String badgeCode = "NEW_STAR";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return;
-        }
-
-        long totalItems = person.getSellingProducts().size() + person.getOwnedAreas().size();
-        if (totalItems >= 3) {
-            awardBadge(person, badgeCode);
-        }
-    }
-
-    /**
-     * Aktywny wynajmujący - 5+ obszarów dodanych
-     */
-    private void checkActiveHost(Person person) {
-        String badgeCode = "ACTIVE_HOST";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return;
-        }
+    private void checkTycoon(Person person) {
+        String badgeCode = "TYCOON";
+        if (hasBadge(person, badgeCode)) return;
 
         if (person.getOwnedAreas().size() >= 5) {
             awardBadge(person, badgeCode);
@@ -146,88 +96,46 @@ public class BadgeService {
     }
 
     /**
-     * Doskonała obsługa - 10+ opinii z oceną 5 gwiazdek
+     * 3. TRUSTED_SELLER (Zaufany Sprzedawca)
+     * Warunek: Średnia ocen powyżej 4.5 przy minimum 5 ocenach wszystkich produktów łącznie.
      */
-    private void checkPerfectService(Person person) {
-        String badgeCode = "PERFECT_SERVICE";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return;
+    private void checkTrustedSeller(Person person) {
+        String badgeCode = "TRUSTED_SELLER";
+        if (hasBadge(person, badgeCode)) return;
+
+        List<Product> products = person.getSellingProducts();
+        if (products.isEmpty()) return;
+
+        // Pobieramy wszystkie opinie dla wszystkich produktów tego użytkownika
+        long totalReviewsCount = 0;
+        double totalRatingSum = 0.0;
+
+        for (Product product : products) {
+            List<ProductReview> reviews = productReviewRepository.findByProductOrderByCreatedAtDesc(product);
+            totalReviewsCount += reviews.size();
+            totalRatingSum += reviews.stream().mapToInt(ProductReview::getRating).sum();
         }
 
-        long perfectProductReviews = person.getSellingProducts().stream()
-                .flatMap(p -> productReviewRepository.findByProductOrderByCreatedAtDesc(p).stream())
-                .filter(r -> r.getRating() == 5)
-                .count();
-
-        long perfectAreaReviews = person.getOwnedAreas().stream()
-                .flatMap(a -> areaReviewRepository.findByAreaOrderByCreatedAtDesc(a).stream())
-                .filter(r -> r.getRating() == 5)
-                .count();
-
-        if (perfectProductReviews + perfectAreaReviews >= 10) {
-            awardBadge(person, badgeCode);
-        }
-    }
-
-    /**
-     * Weteran - konto starsze niż 6 miesięcy
-     */
-    private void checkVeteran(Person person) {
-        String badgeCode = "VETERAN";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return;
-        }
-
-        if (person.getCreatedAt() != null) {
-            LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
-            if (person.getCreatedAt().isBefore(sixMonthsAgo)) {
+        if (totalReviewsCount >= 5) {
+            double globalAverage = totalRatingSum / totalReviewsCount;
+            if (globalAverage > 4.5) {
                 awardBadge(person, badgeCode);
             }
         }
     }
 
-    /**
-     * Najwyżej oceniany - średnia ocen obszarów powyżej 4.8
-     */
-    private void checkTopRated(Person person) {
-        String badgeCode = "TOP_RATED";
-        if (person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode))) {
-            return;
-        }
+    // --- METODY POMOCNICZE ---
 
-        List<Area> areas = person.getOwnedAreas();
-        if (areas.isEmpty()) return;
-
-        double avgRating = areas.stream()
-                .filter(a -> a.getReviewCount() > 0)
-                .mapToDouble(Area::getAverageRating)
-                .average()
-                .orElse(0.0);
-
-        long totalReviews = areas.stream()
-                .mapToLong(Area::getReviewCount)
-                .sum();
-
-        if (avgRating >= 4.8 && totalReviews >= 5) {
-            awardBadge(person, badgeCode);
-        }
+    private boolean hasBadge(Person person, String badgeCode) {
+        return person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode));
     }
 
-    /**
-     * Przyznaj odznakę użytkownikowi
-     */
     private void awardBadge(Person person, String badgeCode) {
-        Badge badge = badgeRepository.findByCode(badgeCode)
-                .orElse(null);
-
-        if (badge != null) {
+        badgeRepository.findByCode(badgeCode).ifPresent(badge -> {
             person.getBadges().add(badge);
-        }
+        });
     }
 
-    /**
-     * Mapowanie Badge → BadgeDTO
-     */
     private BadgeDTO mapToDTO(Badge badge) {
         return BadgeDTO.builder()
                 .id(badge.getId())
@@ -239,38 +147,19 @@ public class BadgeService {
                 .build();
     }
 
-    /**
-     * Inicjalizacja domyślnych odznak w bazie (wywołać raz przy starcie)
-     */
     @Transactional
     public void initializeDefaultBadges() {
-        createBadgeIfNotExists("FREQUENT_SELLER", "Częste nowości",
-                "Dodano 5+ produktów/obszarów w ciągu 30 dni",
-                "fas fa-fire", "#FF6B6B");
+        createBadgeIfNotExists("NEWBIE", "Nowicjusz",
+                "Posiada przynajmniej jeden obszar lub produkt.",
+                "fas fa-seedling", "#51CF66"); // Zielony listek
 
-        createBadgeIfNotExists("TRUSTED_SELLER", "Zaufany sprzedawca",
-                "Średnia ocen produktów powyżej 4.5 (min. 5 opinii)",
-                "fas fa-shield-alt", "#51CF66");
+        createBadgeIfNotExists("TYCOON", "Potentat",
+                "Posiada 5 lub więcej obszarów na własność.",
+                "fas fa-crown", "#FFD700"); // Złota korona
 
-        createBadgeIfNotExists("NEW_STAR", "Nowa gwiazda",
-                "Dodano pierwsze 3 produkty/obszary",
-                "fas fa-star", "#FFD43B");
-
-        createBadgeIfNotExists("ACTIVE_HOST", "Aktywny wynajmujący",
-                "Dodano 5+ obszarów do wynajęcia",
-                "fas fa-home", "#339AF0");
-
-        createBadgeIfNotExists("PERFECT_SERVICE", "Doskonała obsługa",
-                "Otrzymano 10+ opinii z oceną 5 gwiazdek",
-                "fas fa-trophy", "#FFD700");
-
-        createBadgeIfNotExists("VETERAN", "Weteran",
-                "Konto aktywne od ponad 6 miesięcy",
-                "fas fa-crown", "#9775FA");
-
-        createBadgeIfNotExists("TOP_RATED", "Najwyżej oceniany",
-                "Średnia ocen obszarów powyżej 4.8 (min. 5 opinii)",
-                "fas fa-gem", "#20C997");
+        createBadgeIfNotExists("TRUSTED_SELLER", "Zaufany Sprzedawca",
+                "Średnia ocen produktów > 4.5 (przy min. 5 ocenach).",
+                "fas fa-check-circle", "#339AF0"); // Niebieski znaczek
     }
 
     private void createBadgeIfNotExists(String code, String name, String description,
