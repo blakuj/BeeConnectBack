@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,7 +18,7 @@ public class ProductDTO {
     private String description;
     private Double price;
     private ProductCategory category;
-    private String imageBase64;
+    private List<String> images;
     private Integer stock;
     private Boolean available;
     private Double rating;

@@ -5,17 +5,19 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-
 @Builder
 public class AreaDTO {
     private Long id;
-    private String type;
+
+    private Set<FlowerDTO> flowers;
+
     private List<List<Double>> coordinates;
     private double area;
     private String description;
@@ -24,15 +26,10 @@ public class AreaDTO {
     private AvailabilityStatus status;
     private String ownerFirstName;
     private String ownerLastName;
-
-    private LocalDate availableFrom ;
-    private String imgBase64;
-
-
+    private LocalDate availableFrom;
+    private List<String> images;
     private String name;
     private Double averageRating;
     private Integer reviewCount;
     private Long reservationId;
-
-
 }

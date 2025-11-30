@@ -6,7 +6,9 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "area")
@@ -19,12 +21,24 @@ public class Area {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String type;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "area_flowers",
+            joinColumns = @JoinColumn(name = "area_id"),
+            inverseJoinColumns = @JoinColumn(name = "flower_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Flower> flowers = new HashSet<>();
 
     @ElementCollection
     @CollectionTable(name = "area_coordinates", joinColumns = @JoinColumn(name = "area_id"))
     @Column(name = "coordinate")
     private List<String> coordinates;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_id")
+    private List<Image> images = new ArrayList<>();
 
     private double area;
 

@@ -173,7 +173,6 @@ public class OrderService {
         List<Order> allOrders = new java.util.ArrayList<>(purchases);
         allOrders.addAll(sales);
 
-        // Sortuj po dacie zamówienia (najnowsze pierwsze)
         allOrders.sort((o1, o2) -> o2.getOrderedAt().compareTo(o1.getOrderedAt()));
 
         return allOrders.stream()
@@ -185,6 +184,11 @@ public class OrderService {
      * Mapowanie Order → OrderDTO
      */
     private OrderDTO mapToDTO(Order order) {
+        String productImage = null;
+        if (order.getProduct().getImages() != null && !order.getProduct().getImages().isEmpty()) {
+            productImage = order.getProduct().getImages().get(0).getFileContent();
+        }
+
         return OrderDTO.builder()
                 .id(order.getId())
                 .buyerId(order.getBuyer().getId())
@@ -198,7 +202,7 @@ public class OrderService {
                 .productId(order.getProduct().getId())
                 .productName(order.getProduct().getName())
                 .productCategory(order.getProduct().getCategory().toString())
-                .productImage(order.getProduct().getImageBase64())
+                .productImage(productImage)
                 .quantity(order.getQuantity())
                 .pricePerUnit(order.getPricePerUnit())
                 .totalPrice(order.getTotalPrice())

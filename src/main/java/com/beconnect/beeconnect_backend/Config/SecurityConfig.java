@@ -60,7 +60,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(asList("http://localhost:63342","https://beeconnect.ksrtk.myds.me/")); //do zmiany lokalnie
+        configuration.setAllowedOrigins(asList("http://localhost:63343","https://beeconnect.ksrtk.myds.me/")); //do zmiany lokalnie
         configuration.setAllowedMethods(asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(asList("Authorization", "Content-Type"));

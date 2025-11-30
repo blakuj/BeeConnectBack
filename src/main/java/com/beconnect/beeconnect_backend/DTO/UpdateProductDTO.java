@@ -3,6 +3,8 @@ package com.beconnect.beeconnect_backend.DTO;
 import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import lombok.*;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,7 +16,7 @@ public class UpdateProductDTO {
     private String description;
     private Double price;
     private ProductCategory category;
-    private String imageBase64;
+    private List<String> images;
     private Integer stock;
     private Boolean available;
     private String location;

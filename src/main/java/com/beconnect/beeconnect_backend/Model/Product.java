@@ -33,9 +33,9 @@ public class Product {
     @Column(nullable = false)
     private ProductCategory category;
 
-    @Lob
-    private String imageBase64;
-
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private List<Image> images = new ArrayList<>();
     @Column(nullable = false)
     private Integer stock;
 

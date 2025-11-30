@@ -301,7 +301,7 @@ public class ReservationService {
                 .id(reservation.getId())
                 .areaId(area.getId())
                 .areaName(area.getName())
-                .areaType(area.getType())
+                .areaType(area.getFlowers().stream().findFirst().get().getName())
                 .tenantId(tenant.getId())
                 .tenantFirstname(tenant.getFirstname())
                 .tenantLastname(tenant.getLastname())

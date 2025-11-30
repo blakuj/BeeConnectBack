@@ -4,6 +4,8 @@ import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -13,8 +15,10 @@ import java.time.LocalDate;
 public class EditAreaDTO {
     private Long id;
     private String name;
-    private String imgBase64;
-    private String type;
+    private List<String> images;
+
+    private Set<FlowerDTO> flowers;
+
     private int maxHives;
     private float pricePerDay;
     private String description;
