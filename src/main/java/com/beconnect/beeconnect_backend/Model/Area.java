@@ -3,6 +3,7 @@ package com.beconnect.beeconnect_backend.Model;
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.locationtech.jts.geom.Polygon; // Import JTS
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -21,6 +22,10 @@ public class Area {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "geometry")
+    private Polygon polygon;
+
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "area_flowers",
@@ -31,25 +36,15 @@ public class Area {
     @EqualsAndHashCode.Exclude
     private Set<Flower> flowers = new HashSet<>();
 
-    @ElementCollection
-    @CollectionTable(name = "area_coordinates", joinColumns = @JoinColumn(name = "area_id"))
-    @Column(name = "coordinate")
-    private List<String> coordinates;
-
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "area_id")
     private List<Image> images = new ArrayList<>();
 
     private double area;
-
     private String description;
-
     private int maxHives;
-
     private double pricePerDay;
-
     private LocalDate availableFrom;
-
     private LocalDate endDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -67,12 +62,9 @@ public class Area {
     private String imgBase64;
 
     private String name;
-
-    // Rating fields
     private Double averageRating = 0.0;
     private Integer reviewCount = 0;
 
-    // Relacja do opinii
     @OneToMany(mappedBy = "area", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<AreaReview> reviews = new ArrayList<>();
 }

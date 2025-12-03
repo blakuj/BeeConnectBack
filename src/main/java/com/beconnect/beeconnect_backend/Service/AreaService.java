@@ -13,17 +13,17 @@ import com.beconnect.beeconnect_backend.Repository.AreaRepository;
 import com.beconnect.beeconnect_backend.Repository.FlowerRepository;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 import com.beconnect.beeconnect_backend.Repository.ReservationRepository;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +32,7 @@ public class AreaService {
     private final AreaRepository areaRepository;
     private final PersonRepository personRepository;
     private final PersonService personService;
+    private final GeometryFactory geometryFactory = new GeometryFactory(); // Fabryka geometrii
 
     @Autowired
     private FlowerRepository flowerRepository;
@@ -45,10 +46,6 @@ public class AreaService {
         this.personService = personService;
     }
 
-    /**
-     * Pomocnicza metoda do przetwarzania DTO kwiatów na encje Flower.
-     * Zapobiega duplikatom w bazie - szuka po nazwie, a tworzy tylko gdy nie istnieje.
-     */
     private Set<Flower> processFlowers(Set<FlowerDTO> flowerDTOs) {
         Set<Flower> flowers = new HashSet<>();
         if (flowerDTOs != null) {
@@ -58,7 +55,7 @@ public class AreaService {
                             .orElseGet(() -> flowerRepository.save(
                                     Flower.builder()
                                             .name(fDto.getName())
-                                            .color(fDto.getColor() != null ? fDto.getColor() : "#888888") // Domyślny kolor
+                                            .color(fDto.getColor() != null ? fDto.getColor() : "#888888")
                                             .build()
                             ));
                     flowers.add(flower);
@@ -68,10 +65,54 @@ public class AreaService {
         return flowers;
     }
 
+    // Konwersja DTO (Lista List) -> JTS Polygon
+    private Polygon createPolygonFromCoordinates(List<List<Double>> coordinatesDto) {
+        if (coordinatesDto == null || coordinatesDto.size() < 3) {
+            throw new IllegalArgumentException("Polygon must have at least 3 points");
+        }
+
+        // Konwertujemy listę list na tablicę Coordinate
+        List<Coordinate> points = new ArrayList<>();
+        for (List<Double> point : coordinatesDto) {
+            // Leaflet wysyła [lat, lng], a JTS zazwyczaj oczekuje [x, y] (lng, lat)
+            // Jednak w MSSQL dla typu geography kolejność to lat, long.
+            // Dla typu geometry to x, y.
+            // Zakładając spójność z frontendem, zachowajmy kolejność z DTO.
+            points.add(new Coordinate(point.get(0), point.get(1)));
+        }
+
+        // Polygon musi być zamknięty (pierwszy punkt == ostatni punkt)
+        if (!points.get(0).equals(points.get(points.size() - 1))) {
+            points.add(points.get(0));
+        }
+
+        Coordinate[] coordinatesArray = points.toArray(new Coordinate[0]);
+        LinearRing shell = geometryFactory.createLinearRing(coordinatesArray);
+        return geometryFactory.createPolygon(shell);
+    }
+
+    // Konwersja JTS Polygon -> DTO (Lista List)
+    private List<List<Double>> convertPolygonToDto(Polygon polygon) {
+        if (polygon == null) return new ArrayList<>();
+
+        List<List<Double>> result = new ArrayList<>();
+        Coordinate[] coordinates = polygon.getExteriorRing().getCoordinates();
+
+        // Pomijamy ostatni punkt, jeśli jest taki sam jak pierwszy (żeby nie dublować na froncie, choć Leaflet to zniesie)
+        int length = coordinates.length;
+        if (length > 1 && coordinates[0].equals(coordinates[length - 1])) {
+            length--;
+        }
+
+        for (int i = 0; i < length; i++) {
+            result.add(List.of(coordinates[i].x, coordinates[i].y));
+        }
+        return result;
+    }
+
     @Transactional
     public void addArea(AreaDTO areaDto) {
         Person owner = personService.getProfile();
-
         Set<Flower> flowers = processFlowers(areaDto.getFlowers());
 
         List<Image> images = new ArrayList<>();
@@ -81,14 +122,13 @@ public class AreaService {
                     .collect(Collectors.toList());
         }
 
+        // Tworzenie poligonu
+        Polygon polygon = createPolygonFromCoordinates(areaDto.getCoordinates());
+
         Area area = Area.builder()
                 .flowers(flowers)
                 .images(images)
-                .coordinates(
-                        areaDto.getCoordinates().stream()
-                                .map(coord -> coord.get(0) + "," + coord.get(1))
-                                .collect(Collectors.toList())
-                )
+                .polygon(polygon) // Zapisujemy jako geometry
                 .area(areaDto.getArea())
                 .description(areaDto.getDescription())
                 .maxHives(areaDto.getMaxHives())
@@ -111,7 +151,6 @@ public class AreaService {
         toEdit.ifPresent(area -> {
             area.setName(editAreaDTO.getName());
 
-            // Aktualizacja zdjęć (podmiana listy)
             if (editAreaDTO.getImages() != null) {
                 area.getImages().clear();
                 List<Image> newImages = editAreaDTO.getImages().stream()
@@ -120,7 +159,6 @@ public class AreaService {
                 area.getImages().addAll(newImages);
             }
 
-            // Aktualizacja kwiatów (podmiana zbioru)
             if (editAreaDTO.getFlowers() != null) {
                 Set<Flower> newFlowers = processFlowers(editAreaDTO.getFlowers());
                 area.setFlowers(newFlowers);
@@ -131,6 +169,8 @@ public class AreaService {
             area.setPricePerDay(editAreaDTO.getPricePerDay());
             area.setMaxHives(editAreaDTO.getMaxHives());
             area.setAvailabilityStatus(editAreaDTO.getAvailabilityStatus());
+
+            // Jeśli w EditAreaDTO przychodziłyby koordynaty, tu też trzeba by je zaktualizować na Polygon
 
             areaRepository.save(area);
         });
@@ -154,7 +194,6 @@ public class AreaService {
                 .stream()
                 .map(area -> {
                     AreaDTO dto = this.mapToDTO(area);
-                    // Dodaj ID rezerwacji jeśli istnieje
                     Optional<Reservation> reservationOpt = reservationRepository
                             .findByAreaAndTenant(area, currentUser);
                     reservationOpt.ifPresent(reservation -> {
@@ -172,12 +211,8 @@ public class AreaService {
     }
 
     private AreaDTO mapToDTO(Area area) {
-        List<List<Double>> coords = area.getCoordinates().stream()
-                .map(s -> {
-                    String[] parts = s.split(",");
-                    return List.of(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
-                })
-                .collect(Collectors.toList());
+        // Konwersja Polygon z bazy na listę współrzędnych dla frontendu
+        List<List<Double>> coords = convertPolygonToDto(area.getPolygon());
 
         List<String> images = area.getImages().stream()
                 .map(Image::getFileContent)
@@ -195,7 +230,7 @@ public class AreaService {
                 .id(area.getId())
                 .flowers(flowerDTOs)
                 .images(images)
-                .coordinates(coords)
+                .coordinates(coords) // Przekazujemy skonwertowane współrzędne
                 .area(area.getArea())
                 .description(area.getDescription())
                 .maxHives(area.getMaxHives())
