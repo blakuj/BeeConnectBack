@@ -190,15 +190,14 @@ public class AreaService {
 
     public List<AreaDTO> getRentedAreas() {
         Person currentUser = personService.getProfile();
-        return currentUser.getRentedAreas()
-                .stream()
-                .map(area -> {
+
+        List<Reservation> activeReservations = reservationRepository.findByTenant(currentUser);
+
+        return activeReservations.stream()
+                .map(reservation -> {
+                    Area area = reservation.getArea();
                     AreaDTO dto = this.mapToDTO(area);
-                    Optional<Reservation> reservationOpt = reservationRepository
-                            .findByAreaAndTenant(area, currentUser);
-                    reservationOpt.ifPresent(reservation -> {
-                        dto.setReservationId(reservation.getId());
-                    });
+                    dto.setReservationId(reservation.getId());
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -211,7 +210,6 @@ public class AreaService {
     }
 
     private AreaDTO mapToDTO(Area area) {
-        // Konwersja Polygon z bazy na listę współrzędnych dla frontendu
         List<List<Double>> coords = convertPolygonToDto(area.getPolygon());
 
         List<String> images = area.getImages().stream()
@@ -230,7 +228,7 @@ public class AreaService {
                 .id(area.getId())
                 .flowers(flowerDTOs)
                 .images(images)
-                .coordinates(coords) // Przekazujemy skonwertowane współrzędne
+                .coordinates(coords)
                 .area(area.getArea())
                 .description(area.getDescription())
                 .maxHives(area.getMaxHives())

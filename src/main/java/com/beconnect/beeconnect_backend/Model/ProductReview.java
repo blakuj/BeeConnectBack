@@ -26,11 +26,6 @@ public class ProductReview {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    // Relacje
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reviewer_id", nullable = false)
-    private Person reviewer;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;

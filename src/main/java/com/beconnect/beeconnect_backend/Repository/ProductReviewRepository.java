@@ -12,22 +12,17 @@ import java.util.Optional;
 
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Long> {
 
-    // Znajdź opinie dla produktu
+    // Znajdź opinie dla produktu (bez zmian, korzystamy z product_id)
     List<ProductReview> findByProductOrderByCreatedAtDesc(Product product);
 
-    // Znajdź opinię dla konkretnego zamówienia
     Optional<ProductReview> findByOrder(Order order);
 
-    // Sprawdź czy zamówienie ma już opinię
     boolean existsByOrder(Order order);
 
-    // Znajdź opinie wystawione przez użytkownika
-    List<ProductReview> findByReviewerOrderByCreatedAtDesc(Person reviewer);
+    List<ProductReview> findByOrderBuyerOrderByCreatedAtDesc(Person buyer);
 
-    // Policz opinie dla produktu
     long countByProduct(Product product);
 
-    // Średnia ocena dla produktu
     @Query("SELECT AVG(pr.rating) FROM ProductReview pr WHERE pr.product = :product")
     Double getAverageRatingByProduct(Product product);
 }

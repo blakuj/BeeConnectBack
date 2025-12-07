@@ -23,6 +23,9 @@ public class BadgeService {
     @Autowired
     private ProductReviewRepository productReviewRepository;
 
+    @Autowired
+    private ProductRepository productRepository; // Dodano wstrzyknięcie
+
     /**
      * Automatyczna inicjalizacja typów odznak przy starcie aplikacji
      */
@@ -75,7 +78,9 @@ public class BadgeService {
         if (hasBadge(person, badgeCode)) return;
 
         boolean hasAreas = !person.getOwnedAreas().isEmpty();
-        boolean hasProducts = !person.getSellingProducts().isEmpty();
+
+        // ZMIANA: Używamy repository zamiast getSellingProducts()
+        boolean hasProducts = productRepository.countBySeller(person) > 0;
 
         if (hasAreas || hasProducts) {
             awardBadge(person, badgeCode);
@@ -103,10 +108,10 @@ public class BadgeService {
         String badgeCode = "TRUSTED_SELLER";
         if (hasBadge(person, badgeCode)) return;
 
-        List<Product> products = person.getSellingProducts();
+        List<Product> products = productRepository.findBySeller(person);
+
         if (products.isEmpty()) return;
 
-        // Pobieramy wszystkie opinie dla wszystkich produktów tego użytkownika
         long totalReviewsCount = 0;
         double totalRatingSum = 0.0;
 
@@ -151,15 +156,15 @@ public class BadgeService {
     public void initializeDefaultBadges() {
         createBadgeIfNotExists("NEWBIE", "Nowicjusz",
                 "Posiada przynajmniej jeden obszar lub produkt.",
-                "fas fa-seedling", "#51CF66"); // Zielony listek
+                "fas fa-seedling", "#51CF66");
 
         createBadgeIfNotExists("TYCOON", "Potentat",
                 "Posiada 5 lub więcej obszarów na własność.",
-                "fas fa-crown", "#FFD700"); // Złota korona
+                "fas fa-crown", "#FFD700");
 
         createBadgeIfNotExists("TRUSTED_SELLER", "Zaufany Sprzedawca",
                 "Średnia ocen produktów > 4.5 (przy min. 5 ocenach).",
-                "fas fa-check-circle", "#339AF0"); // Niebieski znaczek
+                "fas fa-check-circle", "#339AF0");
     }
 
     private void createBadgeIfNotExists(String code, String name, String description,

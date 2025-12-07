@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 @Entity
 @Table(name = "person")
 @NoArgsConstructor
@@ -40,23 +39,10 @@ public class Person {
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BeeGardenVerification> verifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY)
-    private List<Area> rentedAreas;
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     private List<Area> ownedAreas;
 
-    // Nowe relacje dla marketplace
-    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Product> sellingProducts = new ArrayList<>();
-
-    @OneToMany(mappedBy = "buyer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Order> purchaseHistory = new ArrayList<>();
-
-    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Order> salesHistory = new ArrayList<>();
-
-    // Relacja Many-to-Many z Badge
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "person_badges",

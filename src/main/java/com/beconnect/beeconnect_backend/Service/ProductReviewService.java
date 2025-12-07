@@ -38,37 +38,30 @@ public class ProductReviewService {
     public ProductReviewDTO createReview(CreateProductReviewDTO dto) {
         Person currentUser = personService.getProfile();
 
-        // Walidacja
         if (dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
             throw new RuntimeException("Rating must be between 1 and 5");
         }
 
-        // Pobierz zamówienie
         Order order = orderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // Sprawdź czy zamówienie należy do użytkownika
         if (!order.getBuyer().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You can only review your own orders");
         }
 
-        // Sprawdź czy już nie wystawiono opinii
         if (reviewRepository.existsByOrder(order)) {
             throw new RuntimeException("You have already reviewed this order");
         }
 
-        // Utwórz opinię
         ProductReview review = ProductReview.builder()
                 .rating(dto.getRating())
                 .comment(dto.getComment())
-                .reviewer(currentUser)
                 .product(order.getProduct())
                 .order(order)
                 .build();
 
         review = reviewRepository.save(review);
 
-        // Aktualizuj rating produktu
         updateProductRating(order.getProduct());
 
         return mapToDTO(review);
@@ -92,33 +85,25 @@ public class ProductReviewService {
      */
     public List<ProductReviewDTO> getMyReviews() {
         Person currentUser = personService.getProfile();
-        List<ProductReview> reviews = reviewRepository.findByReviewerOrderByCreatedAtDesc(currentUser);
+        // ZMIANA: używamy nowej metody repozytorium
+        List<ProductReview> reviews = reviewRepository.findByOrderBuyerOrderByCreatedAtDesc(currentUser);
         return reviews.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Sprawdź czy zamówienie może być ocenione
-     */
     public boolean canReviewOrder(Long orderId) {
         Person currentUser = personService.getProfile();
-
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) return false;
 
-        // Sprawdź czy zamówienie należy do użytkownika
         if (!order.getBuyer().getId().equals(currentUser.getId())) {
             return false;
         }
 
-        // Sprawdź czy już nie wystawiono opinii
         return !reviewRepository.existsByOrder(order);
     }
 
-    /**
-     * Aktualizuj średni rating i liczbę opinii dla produktu
-     */
     @Transactional
     public void updateProductRating(Product product) {
         Double averageRating = reviewRepository.getAverageRatingByProduct(product);
@@ -133,14 +118,16 @@ public class ProductReviewService {
      * Mapowanie ProductReview → ProductReviewDTO
      */
     private ProductReviewDTO mapToDTO(ProductReview review) {
+        Person reviewer = review.getOrder().getBuyer();
+
         return ProductReviewDTO.builder()
                 .id(review.getId())
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
-                .reviewerId(review.getReviewer().getId())
-                .reviewerFirstname(review.getReviewer().getFirstname())
-                .reviewerLastname(review.getReviewer().getLastname())
+                .reviewerId(reviewer.getId())
+                .reviewerFirstname(reviewer.getFirstname())
+                .reviewerLastname(reviewer.getLastname())
                 .productId(review.getProduct().getId())
                 .productName(review.getProduct().getName())
                 .orderId(review.getOrder().getId())

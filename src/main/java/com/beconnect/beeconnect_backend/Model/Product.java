@@ -36,6 +36,7 @@ public class Product {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private List<Image> images = new ArrayList<>();
+
     @Column(nullable = false)
     private Integer stock;
 
@@ -43,7 +44,6 @@ public class Product {
     private Boolean available = true;
 
     private Double rating = 0.0;
-
     private Integer reviewCount = 0;
 
     @Column(nullable = false)
@@ -52,23 +52,15 @@ public class Product {
     @Column
     private LocalDateTime updatedAt;
 
-    // Relacja Many-to-One z Person (sprzedawca)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private Person seller;
 
-    // Opcjonalnie: lokalizacja produktu
     private String location;
-
-    // Waga produktu (dla miodu w kg, dla innych w gramach)
     private Double weight;
-
-    // Jednostka wagi
     private String weightUnit;
 
-    // Relacja do opinii
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ProductReview> reviews = new ArrayList<>();
+
 
     @PrePersist
     protected void onCreate() {

@@ -61,7 +61,6 @@ public class Reservation {
     @Column
     private String cancellationReason;
 
-    // Relacja do opinii
     @OneToOne(mappedBy = "reservation", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private AreaReview review;
 

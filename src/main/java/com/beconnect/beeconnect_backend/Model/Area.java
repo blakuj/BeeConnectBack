@@ -51,10 +51,6 @@ public class Area {
     @JoinColumn(name = "owner_id")
     private Person owner;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id")
-    private Person tenant;
-
     @Enumerated(EnumType.STRING)
     private AvailabilityStatus availabilityStatus;
 

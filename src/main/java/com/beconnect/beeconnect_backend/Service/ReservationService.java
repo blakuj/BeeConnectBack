@@ -121,8 +121,7 @@ public class ReservationService {
                 currentUser.getFirstname() + " " + currentUser.getLastname(),
                 reservation.getId()
         );
-        // Zaktualizuj status obszaru na UNAVAILABLE
-        area.setTenant(tenant);
+
         area.setAvailabilityStatus(AvailabilityStatus.UNAVAILABLE);
         areaRepository.save(area);
 
@@ -165,7 +164,6 @@ public class ReservationService {
 
         // Uwolnij obszar
         Area area = reservation.getArea();
-        area.setTenant(null);
         area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
         areaRepository.save(area);
 
@@ -203,7 +201,6 @@ public class ReservationService {
     /**
      * Pobierz rezerwacje dla obszarów użytkownika (jako właściciel)
      */
-
     public List<ReservationResponseDTO> getReservationsForMyAreas() {
         Person owner = personService.getProfile();
         List<Area> myAreas = areaRepository.findByOwner(owner);
@@ -249,7 +246,7 @@ public class ReservationService {
 
             // Uwolnij obszar
             Area area = reservation.getArea();
-            area.setTenant(null);
+            // Usunięto: area.setTenant(null);
             area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
             areaRepository.save(area);
 
