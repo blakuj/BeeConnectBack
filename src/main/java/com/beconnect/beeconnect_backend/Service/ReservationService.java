@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -81,20 +82,22 @@ public class ReservationService {
             throw new RuntimeException("End date must be after start date");
         }
 
-        double totalPrice = days * area.getPricePerDay();
+        BigDecimal pricePerDay = BigDecimal.valueOf(area.getPricePerDay());
+        BigDecimal daysBD = BigDecimal.valueOf(days);
+        BigDecimal totalPrice = pricePerDay.multiply(daysBD);
 
         // Sprawdź saldo użytkownika
-        if (tenant.getBalance() < totalPrice) {
+        if (tenant.getBalance().compareTo(totalPrice) < 0) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + tenant.getBalance() + " PLN");
         }
 
-        // POBIERZ ŚRODKI OD RAZU
-        tenant.setBalance((float) (tenant.getBalance() - totalPrice));
+        // POBIERZ ŚRODKI - odejmowanie
+        tenant.setBalance(tenant.getBalance().subtract(totalPrice));
         personRepository.save(tenant);
 
-        // DODAJ ŚRODKI WŁAŚCICIELOWI
+        // DODAJ ŚRODKI WŁAŚCICIELOWI - dodawanie
         Person owner = area.getOwner();
-        owner.setBalance((float) (owner.getBalance() + totalPrice));
+        owner.setBalance(owner.getBalance().add(totalPrice));
         personRepository.save(owner);
 
         // Utwórz rezerwację jako CONFIRMED od razu
@@ -105,7 +108,7 @@ public class ReservationService {
                 .endDate(dto.getEndDate())
                 .numberOfHives(dto.getNumberOfHives())
                 .totalPrice(totalPrice)
-                .pricePerDay(area.getPricePerDay())
+                .pricePerDay(BigDecimal.valueOf(area.getPricePerDay()))
                 .status(ReservationStatus.CONFIRMED)
                 .confirmedAt(LocalDateTime.now())
                 .notes(dto.getNotes())
@@ -156,8 +159,12 @@ public class ReservationService {
         Person tenant = reservation.getTenant();
         Person owner = reservation.getArea().getOwner();
 
-        tenant.setBalance(tenant.getBalance() + reservation.getTotalPrice().floatValue());
-        owner.setBalance(owner.getBalance() - reservation.getTotalPrice().floatValue());
+        BigDecimal refundAmount = reservation.getTotalPrice();
+
+        // tenant + refund
+        tenant.setBalance(tenant.getBalance().add(refundAmount));
+        // owner - refund
+        owner.setBalance(owner.getBalance().subtract(refundAmount));
 
         personRepository.save(tenant);
         personRepository.save(owner);
@@ -306,8 +313,8 @@ public class ReservationService {
                 .startDate(reservation.getStartDate())
                 .endDate(reservation.getEndDate())
                 .numberOfHives(reservation.getNumberOfHives())
-                .totalPrice(reservation.getTotalPrice())
-                .pricePerDay(reservation.getPricePerDay())
+                .totalPrice(reservation.getTotalPrice().doubleValue())
+                .pricePerDay(reservation.getPricePerDay().doubleValue())
                 .status(reservation.getStatus())
                 .createdAt(reservation.getCreatedAt())
                 .confirmedAt(reservation.getConfirmedAt())

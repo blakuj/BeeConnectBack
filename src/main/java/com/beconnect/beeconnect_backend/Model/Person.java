@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal; // Import BigDecimal
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,7 +30,8 @@ public class Person {
     private String login;
     private String password;
 
-    private float balance;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
@@ -38,7 +40,6 @@ public class Person {
 
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BeeGardenVerification> verifications = new ArrayList<>();
-
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     private List<Area> ownedAreas;
@@ -55,6 +56,9 @@ public class Person {
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
         }
     }
 

@@ -6,14 +6,14 @@ import com.beconnect.beeconnect_backend.Model.Product;
 import com.beconnect.beeconnect_backend.Model.ProductReview;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Long> {
 
-    // Znajdź opinie dla produktu (bez zmian, korzystamy z product_id)
-    List<ProductReview> findByProductOrderByCreatedAtDesc(Product product);
+    List<ProductReview> findByOrderProductOrderByCreatedAtDesc(Product product);
 
     Optional<ProductReview> findByOrder(Order order);
 
@@ -21,8 +21,8 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
 
     List<ProductReview> findByOrderBuyerOrderByCreatedAtDesc(Person buyer);
 
-    long countByProduct(Product product);
+    long countByOrderProduct(Product product);
 
-    @Query("SELECT AVG(pr.rating) FROM ProductReview pr WHERE pr.product = :product")
-    Double getAverageRatingByProduct(Product product);
+    @Query("SELECT AVG(pr.rating) FROM ProductReview pr WHERE pr.order.product = :product")
+    Double getAverageRatingByProduct(@Param("product") Product product);
 }

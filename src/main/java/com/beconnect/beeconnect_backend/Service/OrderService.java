@@ -66,27 +66,26 @@ public class OrderService {
             throw new RuntimeException("You cannot buy your own product");
         }
 
-        // --- ZMIANA NA BIG DECIMAL ---
+        // Obliczenia finansowe na BigDecimal
         BigDecimal quantity = BigDecimal.valueOf(dto.getQuantity());
         BigDecimal pricePerUnit = product.getPrice();
         BigDecimal totalPrice = pricePerUnit.multiply(quantity);
 
-        System.out.println("Total Price (BigDecimal): " + totalPrice);
-
-        // Sprawdź saldo kupującego (zakładam, że Person.balance to nadal Float/Double, więc rzutujemy)
-        BigDecimal buyerBalance = BigDecimal.valueOf(buyer.getBalance());
-        if (buyerBalance.compareTo(totalPrice) < 0) {
+        // Sprawdź saldo kupującego
+        if (buyer.getBalance().compareTo(totalPrice) < 0) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + buyer.getBalance() + " PLN");
         }
 
-        buyer.setBalance(buyerBalance.subtract(totalPrice).floatValue());
+        // POBIERZ ŚRODKI OD KUPUJĄCEGO
+        buyer.setBalance(buyer.getBalance().subtract(totalPrice));
         personRepository.save(buyer);
 
+        // DODAJ ŚRODKI SPRZEDAWCY
         Person seller = product.getSeller();
-        BigDecimal sellerBalance = BigDecimal.valueOf(seller.getBalance());
-        seller.setBalance(sellerBalance.add(totalPrice).floatValue());
+        seller.setBalance(seller.getBalance().add(totalPrice));
         personRepository.save(seller);
 
+        // Aktualizacja stanu magazynowego
         product.setStock(product.getStock() - dto.getQuantity());
 
         if (product.getStock() == 0) {
@@ -95,6 +94,7 @@ public class OrderService {
 
         productRepository.save(product);
 
+        // Zapisz zamówienie
         Order order = Order.builder()
                 .buyer(buyer)
                 .product(product)
@@ -108,14 +108,15 @@ public class OrderService {
 
         order = orderRepository.save(order);
 
+        // Wyślij powiadomienie
         Person currentUser = personService.getProfile();
-
         notificationService.notifyNewOrder(
                 product.getSeller().getId(),
                 product.getName(),
                 currentUser.getFirstname() + " " + currentUser.getLastname(),
                 order.getId()
         );
+
         return mapToDTO(order);
     }
 

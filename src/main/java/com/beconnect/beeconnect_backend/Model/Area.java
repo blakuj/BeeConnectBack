@@ -3,7 +3,9 @@ package com.beconnect.beeconnect_backend.Model;
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.locationtech.jts.geom.Polygon; // Import JTS
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+import org.locationtech.jts.geom.Polygon;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,18 +15,20 @@ import java.util.Set;
 
 @Entity
 @Table(name = "area")
+@SQLDelete(sql = "UPDATE area SET deleted = true WHERE id=?")
+@Where(clause = "deleted=false")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Area {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(columnDefinition = "geometry")
     private Polygon polygon;
-
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -41,7 +45,10 @@ public class Area {
     private List<Image> images = new ArrayList<>();
 
     private double area;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
     private int maxHives;
     private double pricePerDay;
     private LocalDate availableFrom;
@@ -58,9 +65,13 @@ public class Area {
     private String imgBase64;
 
     private String name;
+
+    @Builder.Default
     private Double averageRating = 0.0;
+
+    @Builder.Default
     private Integer reviewCount = 0;
 
-    @OneToMany(mappedBy = "area", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<AreaReview> reviews = new ArrayList<>();
+    @Column(nullable = false)
+    private boolean deleted = false;
 }

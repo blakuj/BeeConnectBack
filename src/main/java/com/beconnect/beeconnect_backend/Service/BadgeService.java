@@ -116,7 +116,7 @@ public class BadgeService {
         double totalRatingSum = 0.0;
 
         for (Product product : products) {
-            List<ProductReview> reviews = productReviewRepository.findByProductOrderByCreatedAtDesc(product);
+            List<ProductReview> reviews = productReviewRepository.findByOrderProductOrderByCreatedAtDesc(product);
             totalReviewsCount += reviews.size();
             totalRatingSum += reviews.stream().mapToInt(ProductReview::getRating).sum();
         }
@@ -129,7 +129,6 @@ public class BadgeService {
         }
     }
 
-    // --- METODY POMOCNICZE ---
 
     private boolean hasBadge(Person person, String badgeCode) {
         return person.getBadges().stream().anyMatch(b -> b.getCode().equals(badgeCode));

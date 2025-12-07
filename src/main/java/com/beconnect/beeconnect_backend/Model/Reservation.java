@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -37,10 +38,10 @@ public class Reservation {
     private Integer numberOfHives;
 
     @Column(nullable = false)
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     @Column(nullable = false)
-    private Double pricePerDay;
+    private BigDecimal pricePerDay;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
