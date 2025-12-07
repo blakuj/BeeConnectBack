@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,21 +24,20 @@ public class Order {
     private Person buyer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
-    private Person seller;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    private ProductReview review;
 
     @Column(nullable = false)
     private Integer quantity;
 
-    @Column(nullable = false)
-    private Double pricePerUnit;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal pricePerUnit;
 
-    @Column(nullable = false)
-    private Double totalPrice;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal totalPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -52,9 +52,12 @@ public class Order {
 
     private String buyerNotes;
 
-
     @PrePersist
     protected void onCreate() {
         orderedAt = LocalDateTime.now();
+    }
+
+    public Person getSeller() {
+        return product != null ? product.getSeller() : null;
     }
 }

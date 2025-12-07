@@ -13,17 +13,20 @@ import java.time.LocalDateTime;
 public class ConversationDTO {
     private Long id;
 
-    // Dane drugiego uczestnika (nie zalogowanego użytkownika)
+
     private Long otherUserId;
     private String otherUserFirstname;
     private String otherUserLastname;
     private String otherUserEmail;
 
-    // Ostatnia wiadomość
+
+    private Long productId;
+    private String productName;
+    private String productImage;
+
     private String lastMessageContent;
     private LocalDateTime lastMessageAt;
 
-    // Liczba nieprzeczytanych wiadomości
     private Integer unreadCount;
 
     private LocalDateTime createdAt;

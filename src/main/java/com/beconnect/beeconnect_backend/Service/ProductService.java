@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +44,7 @@ public class ProductService {
             throw new RuntimeException("Stock cannot be negative");
         }
 
-        // Obsługa zdjęć - konwersja List<String> na List<Image>
+        // Obsługa zdjęć
         List<Image> images = new ArrayList<>();
         if (dto.getImages() != null) {
             images = dto.getImages().stream()
@@ -54,9 +55,10 @@ public class ProductService {
         Product product = Product.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .price(dto.getPrice())
+                // ZMIANA: Konwersja Double (DTO) -> BigDecimal (Entity)
+                .price(BigDecimal.valueOf(dto.getPrice()))
                 .category(dto.getCategory())
-                .images(images) // Przypisanie listy zdjęć
+                .images(images)
                 .stock(dto.getStock())
                 .available(true)
                 .rating(0.0)
@@ -65,11 +67,12 @@ public class ProductService {
                 .location(dto.getLocation())
                 .weight(dto.getWeight())
                 .weightUnit(dto.getWeightUnit())
+                .deleted(false) // Ustawiamy domyślny stan
                 .build();
 
         product = productRepository.save(product);
 
-        // Sprawdzenie odznak po dodaniu produktu
+        // Sprawdzenie odznak
         try {
             badgeService.checkAndAwardBadges(personService.getProfile().getId());
         } catch (Exception e) {
@@ -86,18 +89,19 @@ public class ProductService {
         Product product = productRepository.findById(dto.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Sprawdzenie uprawnień
         if (!product.getSeller().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You don't have permission to edit this product");
         }
 
-        // Aktualizacja pól
         if (dto.getName() != null) product.setName(dto.getName());
         if (dto.getDescription() != null) product.setDescription(dto.getDescription());
-        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+
+        if (dto.getPrice() != null) {
+            product.setPrice(BigDecimal.valueOf(dto.getPrice()));
+        }
+
         if (dto.getCategory() != null) product.setCategory(dto.getCategory());
 
-        // Aktualizacja zdjęć
         if (dto.getImages() != null) {
             product.getImages().clear();
             List<Image> newImages = dto.getImages().stream()
@@ -187,7 +191,6 @@ public class ProductService {
     }
 
     private ProductDTO mapToDTO(Product product) {
-        // Mapowanie zdjęć
         List<String> images = product.getImages().stream()
                 .map(Image::getFileContent)
                 .collect(Collectors.toList());
@@ -196,9 +199,9 @@ public class ProductService {
                 .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
-                .price(product.getPrice())
+                .price(product.getPrice().doubleValue())
                 .category(product.getCategory())
-                .images(images) // Lista zdjęć
+                .images(images)
                 .stock(product.getStock())
                 .available(product.getAvailable())
                 .rating(product.getRating())

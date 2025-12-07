@@ -3,13 +3,18 @@ package com.beconnect.beeconnect_backend.Model;
 import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "product")
+@SQLDelete(sql = "UPDATE product SET deleted = true WHERE id=?")
+@Where(clause = "deleted=false")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,8 +31,8 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-    private Double price;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -37,11 +42,17 @@ public class Product {
     @JoinColumn(name = "product_id")
     private List<Image> images = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Conversation> conversations = new ArrayList<>();
+
     @Column(nullable = false)
     private Integer stock;
 
     @Column(nullable = false)
     private Boolean available = true;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     private Double rating = 0.0;
     private Integer reviewCount = 0;
@@ -59,8 +70,6 @@ public class Product {
     private String location;
     private Double weight;
     private String weightUnit;
-
-
 
     @PrePersist
     protected void onCreate() {

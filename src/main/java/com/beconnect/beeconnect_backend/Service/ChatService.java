@@ -4,9 +4,11 @@ import com.beconnect.beeconnect_backend.DTO.*;
 import com.beconnect.beeconnect_backend.Model.Conversation;
 import com.beconnect.beeconnect_backend.Model.Message;
 import com.beconnect.beeconnect_backend.Model.Person;
+import com.beconnect.beeconnect_backend.Model.Product;
 import com.beconnect.beeconnect_backend.Repository.ConversationRepository;
 import com.beconnect.beeconnect_backend.Repository.MessageRepository;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
+import com.beconnect.beeconnect_backend.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,17 +30,26 @@ public class ChatService {
     private PersonRepository personRepository;
 
     @Autowired
+    private ProductRepository productRepository; // Potrzebne do pobrania produktu
+
+    @Autowired
     private PersonService personService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * Pobierz wszystkie konwersacje zalogowanego użytkownika
      */
     public List<ConversationDTO> getMyConversations() {
         Person currentUser = personService.getProfile();
-        List<Conversation> conversations = conversationRepository.findByUser(currentUser);
+
+        // ZMIANA: Szukamy po nowym query (jako kupujący lub sprzedawca produktu)
+        List<Conversation> conversations = conversationRepository.findAllByParticipant(currentUser);
 
         return conversations.stream()
                 .map(conv -> mapConversationToDTO(conv, currentUser))
+                .sorted((c1, c2) -> c2.getLastMessageAt().compareTo(c1.getLastMessageAt())) // Sortuj od najnowszych
                 .collect(Collectors.toList());
     }
 
@@ -51,8 +62,8 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        // Sprawdź czy użytkownik jest uczestnikiem
-        if (!conversation.isParticipant(currentUser)) {
+        // ZMIANA: Weryfikacja uczestnictwa (metoda pomocnicza poniżej)
+        if (!isUserParticipant(conversation, currentUser)) {
             throw new RuntimeException("You don't have access to this conversation");
         }
 
@@ -62,9 +73,6 @@ public class ChatService {
                 .map(msg -> mapMessageToDTO(msg, currentUser))
                 .collect(Collectors.toList());
     }
-
-    @Autowired
-    private NotificationService notificationService;
 
     /**
      * Wyślij wiadomość w istniejącej konwersacji
@@ -76,7 +84,7 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(dto.getConversationId())
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        if (!conversation.isParticipant(currentUser)) {
+        if (!isUserParticipant(conversation, currentUser)) {
             throw new RuntimeException("You don't have access to this conversation");
         }
 
@@ -93,12 +101,9 @@ public class ChatService {
 
         message = messageRepository.save(message);
 
-        conversation.setLastMessageContent(dto.getContent().trim());
-        conversation.setLastMessageAt(message.getSentAt());
-        conversationRepository.save(conversation);
+        // ZMIANA: Pobieranie drugiego uczestnika nową metodą
+        Person otherUser = getOtherParticipant(conversation, currentUser);
 
-        // DODAJ: Wyślij powiadomienie do drugiego uczestnika
-        Person otherUser = conversation.getOtherParticipant(currentUser);
         notificationService.notifyNewMessage(
                 otherUser.getId(),
                 currentUser.getFirstname() + " " + currentUser.getLastname(),
@@ -109,35 +114,37 @@ public class ChatService {
     }
 
     /**
-     * Rozpocznij nową konwersację
+     * Rozpocznij nową konwersację (O PRODUKCIE)
      */
     @Transactional
     public ConversationDTO startConversation(StartConversationDTO dto) {
         Person currentUser = personService.getProfile();
 
-        // Pobierz drugiego użytkownika
-        Person otherUser = personRepository.findById(dto.getOtherUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // ZMIANA: Pobieramy Produkt, a nie usera bezpośrednio
+        Product product = productRepository.findById(dto.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Sprawdź czy użytkownik nie próbuje rozpocząć konwersacji sam ze sobą
-        if (currentUser.getId().equals(otherUser.getId())) {
-            throw new RuntimeException("Cannot start conversation with yourself");
+        Person seller = product.getSeller();
+
+        // Sprawdź czy użytkownik nie pisze sam do siebie (jest sprzedawcą)
+        if (seller.getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You cannot start a conversation about your own product");
         }
 
-        // Sprawdź czy konwersacja już istnieje
-        Conversation conversation = conversationRepository.findByParticipants(currentUser, otherUser)
+
+        Conversation conversation = conversationRepository.findByBuyerAndProduct(currentUser, product)
                 .orElse(null);
 
         if (conversation == null) {
-            // Utwórz nową konwersację
             conversation = Conversation.builder()
-                    .participant1(currentUser)
-                    .participant2(otherUser)
+                    .buyer(currentUser)
+                    .product(product)
+                    .startedAt(LocalDateTime.now())
                     .build();
             conversation = conversationRepository.save(conversation);
         }
 
-        // Jeśli jest początkowa wiadomość, wyślij ją
+
         if (dto.getInitialMessage() != null && !dto.getInitialMessage().trim().isEmpty()) {
             Message message = Message.builder()
                     .conversation(conversation)
@@ -147,18 +154,12 @@ public class ChatService {
                     .build();
             messageRepository.save(message);
 
-            // Zaktualizuj ostatnią wiadomość
-            conversation.setLastMessageContent(dto.getInitialMessage().trim());
-            conversation.setLastMessageAt(LocalDateTime.now());
-            conversationRepository.save(conversation);
+
         }
 
         return mapConversationToDTO(conversation, currentUser);
     }
 
-    /**
-     * Oznacz wiadomości jako przeczytane
-     */
     @Transactional
     public void markAsRead(Long conversationId) {
         Person currentUser = personService.getProfile();
@@ -166,37 +167,62 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        // Sprawdź czy użytkownik jest uczestnikiem
-        if (!conversation.isParticipant(currentUser)) {
+        if (!isUserParticipant(conversation, currentUser)) {
             throw new RuntimeException("You don't have access to this conversation");
         }
 
         messageRepository.markAllAsRead(conversation, currentUser);
     }
 
-    /**
-     * Pobierz szczegóły konwersacji
-     */
     public ConversationDTO getConversation(Long conversationId) {
         Person currentUser = personService.getProfile();
 
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        // Sprawdź czy użytkownik jest uczestnikiem
-        if (!conversation.isParticipant(currentUser)) {
+        if (!isUserParticipant(conversation, currentUser)) {
             throw new RuntimeException("You don't have access to this conversation");
         }
 
         return mapConversationToDTO(conversation, currentUser);
     }
 
+
+    /**
+     * Sprawdza, czy user jest kupującym LUB sprzedawcą produktu w konwersacji
+     */
+    private boolean isUserParticipant(Conversation conversation, Person user) {
+        Long userId = user.getId();
+        Long buyerId = conversation.getBuyer().getId();
+        Long sellerId = conversation.getProduct().getSeller().getId(); // Seller z produktu
+
+        return userId.equals(buyerId) || userId.equals(sellerId);
+    }
+
+    /**
+     * Zwraca "tą drugą osobę" w konwersacji
+     */
+    private Person getOtherParticipant(Conversation conversation, Person currentUser) {
+        Person buyer = conversation.getBuyer();
+        Person seller = conversation.getProduct().getSeller();
+
+        if (currentUser.getId().equals(buyer.getId())) {
+            return seller;
+        } else {
+            return buyer;
+        }
+    }
+
     /**
      * Mapowanie Conversation → ConversationDTO
      */
     private ConversationDTO mapConversationToDTO(Conversation conversation, Person currentUser) {
-        Person otherUser = conversation.getOtherParticipant(currentUser);
+        Person otherUser = getOtherParticipant(conversation, currentUser);
         long unreadCount = messageRepository.countUnreadMessages(conversation, currentUser);
+
+        String lastMsgContent = "";
+        LocalDateTime lastMsgTime = conversation.getStartedAt();
+
 
         return ConversationDTO.builder()
                 .id(conversation.getId())
@@ -204,16 +230,17 @@ public class ChatService {
                 .otherUserFirstname(otherUser.getFirstname())
                 .otherUserLastname(otherUser.getLastname())
                 .otherUserEmail(otherUser.getEmail())
-                .lastMessageContent(conversation.getLastMessageContent())
-                .lastMessageAt(conversation.getLastMessageAt())
+                .productId(conversation.getProduct().getId())
+                .productName(conversation.getProduct().getName())
+                .productImage(conversation.getProduct().getImages().isEmpty() ? null : conversation.getProduct().getImages().get(0).getFileContent())
+
+                .lastMessageContent(lastMsgContent)
+                .lastMessageAt(lastMsgTime)
                 .unreadCount((int) unreadCount)
-                .createdAt(conversation.getCreatedAt())
+                .createdAt(conversation.getStartedAt()) // lub getCreatedAt
                 .build();
     }
 
-    /**
-     * Mapowanie Message → MessageDTO
-     */
     private MessageDTO mapMessageToDTO(Message message, Person currentUser) {
         return MessageDTO.builder()
                 .id(message.getId())

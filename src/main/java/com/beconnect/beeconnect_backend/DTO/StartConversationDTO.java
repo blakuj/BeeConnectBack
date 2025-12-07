@@ -8,6 +8,6 @@ import lombok.*;
 @Getter
 @Setter
 public class StartConversationDTO {
-    private Long otherUserId;
+    private Long productId;
     private String initialMessage;
 }

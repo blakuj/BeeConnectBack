@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,7 @@ public class OrderService {
     public OrderDTO createOrder(CreateOrderDTO dto) {
         Person buyer = personService.getProfile();
 
-        // Walidacja
+        // Walidacja ilości
         if (dto.getQuantity() == null || dto.getQuantity() <= 0) {
             throw new RuntimeException("Quantity must be greater than 0");
         }
@@ -65,41 +66,40 @@ public class OrderService {
             throw new RuntimeException("You cannot buy your own product");
         }
 
-        // Oblicz cenę
-        double totalPrice = product.getPrice() * dto.getQuantity();
-        System.out.println(totalPrice);
-        System.out.println(dto.getQuantity());
-        // Sprawdź saldo kupującego
-        if (buyer.getBalance() < totalPrice) {
+        // --- ZMIANA NA BIG DECIMAL ---
+        BigDecimal quantity = BigDecimal.valueOf(dto.getQuantity());
+        BigDecimal pricePerUnit = product.getPrice();
+        BigDecimal totalPrice = pricePerUnit.multiply(quantity);
+
+        System.out.println("Total Price (BigDecimal): " + totalPrice);
+
+        // Sprawdź saldo kupującego (zakładam, że Person.balance to nadal Float/Double, więc rzutujemy)
+        BigDecimal buyerBalance = BigDecimal.valueOf(buyer.getBalance());
+        if (buyerBalance.compareTo(totalPrice) < 0) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + buyer.getBalance() + " PLN");
         }
 
-        // Pobierz środki od kupującego
-        buyer.setBalance((float) (buyer.getBalance() - totalPrice));
+        buyer.setBalance(buyerBalance.subtract(totalPrice).floatValue());
         personRepository.save(buyer);
 
-        // Dodaj środki sprzedawcy
         Person seller = product.getSeller();
-        seller.setBalance((float) (seller.getBalance() + totalPrice));
+        BigDecimal sellerBalance = BigDecimal.valueOf(seller.getBalance());
+        seller.setBalance(sellerBalance.add(totalPrice).floatValue());
         personRepository.save(seller);
 
-        // Zmniejsz stock produktu
         product.setStock(product.getStock() - dto.getQuantity());
 
-        // Jeśli stock = 0, ustaw available na false
         if (product.getStock() == 0) {
             product.setAvailable(false);
         }
 
         productRepository.save(product);
 
-        // Utwórz zamówienie
         Order order = Order.builder()
                 .buyer(buyer)
-                .seller(seller)
                 .product(product)
                 .quantity(dto.getQuantity())
-                .pricePerUnit(product.getPrice())
+                .pricePerUnit(pricePerUnit)
                 .totalPrice(totalPrice)
                 .status(OrderStatus.COMPLETED)
                 .deliveryAddress(dto.getDeliveryAddress())
@@ -135,6 +135,7 @@ public class OrderService {
      */
     public List<OrderDTO> getMySales() {
         Person seller = personService.getProfile();
+
         List<Order> orders = orderRepository.findRecentOrdersBySeller(seller);
         return orders.stream()
                 .map(this::mapToDTO)
@@ -150,9 +151,8 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // Sprawdź uprawnienia (tylko kupujący lub sprzedający mogą zobaczyć zamówienie)
         boolean isBuyer = order.getBuyer().getId().equals(currentUser.getId());
-        boolean isSeller = order.getSeller().getId().equals(currentUser.getId());
+        boolean isSeller = order.getProduct().getSeller().getId().equals(currentUser.getId());
 
         if (!isBuyer && !isSeller) {
             throw new RuntimeException("You don't have permission to view this order");
@@ -189,23 +189,25 @@ public class OrderService {
             productImage = order.getProduct().getImages().get(0).getFileContent();
         }
 
+        Person seller = order.getProduct().getSeller();
+
         return OrderDTO.builder()
                 .id(order.getId())
                 .buyerId(order.getBuyer().getId())
                 .buyerFirstname(order.getBuyer().getFirstname())
                 .buyerLastname(order.getBuyer().getLastname())
                 .buyerEmail(order.getBuyer().getEmail())
-                .sellerId(order.getSeller().getId())
-                .sellerFirstname(order.getSeller().getFirstname())
-                .sellerLastname(order.getSeller().getLastname())
-                .sellerEmail(order.getSeller().getEmail())
+                .sellerId(seller.getId())
+                .sellerFirstname(seller.getFirstname())
+                .sellerLastname(seller.getLastname())
+                .sellerEmail(seller.getEmail())
                 .productId(order.getProduct().getId())
                 .productName(order.getProduct().getName())
                 .productCategory(order.getProduct().getCategory().toString())
                 .productImage(productImage)
                 .quantity(order.getQuantity())
-                .pricePerUnit(order.getPricePerUnit())
-                .totalPrice(order.getTotalPrice())
+                .pricePerUnit(order.getPricePerUnit().doubleValue())
+                .totalPrice(order.getTotalPrice().doubleValue())
                 .status(order.getStatus())
                 .orderedAt(order.getOrderedAt())
                 .deliveredAt(order.getDeliveredAt())
