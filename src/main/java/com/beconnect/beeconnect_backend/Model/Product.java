@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
@@ -13,8 +14,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "product")
-@SQLDelete(sql = "UPDATE product SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
+@SoftDelete
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -50,9 +50,6 @@ public class Product {
 
     @Column(nullable = false)
     private Boolean available = true;
-
-    @Column(nullable = false)
-    private boolean deleted = false;
 
     private Double rating = 0.0;
     private Integer reviewCount = 0;

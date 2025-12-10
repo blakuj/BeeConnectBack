@@ -109,7 +109,7 @@ public class ReservationService {
                 .numberOfHives(dto.getNumberOfHives())
                 .totalPrice(totalPrice)
                 .pricePerDay(BigDecimal.valueOf(area.getPricePerDay()))
-                .status(ReservationStatus.CONFIRMED)
+                .status(ReservationStatus.ACTIVE)
                 .confirmedAt(LocalDateTime.now())
                 .notes(dto.getNotes())
                 .build();

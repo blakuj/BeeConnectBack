@@ -175,7 +175,7 @@ public class NotificationService {
                 NotificationType.AREA_RESERVED,
                 "Nowa rezerwacja",
                 renterName + " zarezerwował Twój obszar: " + areaName,
-                "my-areas.html",
+                "profile.html",
                 reservationId
         );
     }
@@ -189,7 +189,7 @@ public class NotificationService {
                 NotificationType.RESERVATION_CONFIRMED,
                 "Rezerwacja potwierdzona",
                 "Twoja rezerwacja obszaru \"" + areaName + "\" została potwierdzona",
-                "reservations.html",
+                "profile.html",
                 reservationId
         );
     }
@@ -217,7 +217,7 @@ public class NotificationService {
                 NotificationType.NEW_ORDER,
                 "Nowe zamówienie",
                 buyerName + " kupił Twój produkt: " + productName,
-                "orders.html",
+                "profile.html",
                 orderId
         );
     }

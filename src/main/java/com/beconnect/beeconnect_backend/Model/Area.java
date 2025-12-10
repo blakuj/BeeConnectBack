@@ -3,8 +3,7 @@ package com.beconnect.beeconnect_backend.Model;
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SoftDelete;
 import org.locationtech.jts.geom.Polygon;
 
 import java.time.LocalDate;
@@ -15,8 +14,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "area")
-@SQLDelete(sql = "UPDATE area SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
+@SoftDelete
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -71,7 +69,4 @@ public class Area {
 
     @Builder.Default
     private Integer reviewCount = 0;
-
-    @Column(nullable = false)
-    private boolean deleted = false;
 }

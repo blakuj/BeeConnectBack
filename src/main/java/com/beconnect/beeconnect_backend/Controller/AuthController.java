@@ -87,7 +87,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(86400); // 24h
-        // cookie.setSecure(true); // potem na produkcje
+         cookie.setSecure(true); // potem na produkcje
         response.addCookie(cookie);
     }
 }

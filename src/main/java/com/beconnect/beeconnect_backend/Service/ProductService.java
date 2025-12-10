@@ -55,7 +55,6 @@ public class ProductService {
         Product product = Product.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                // ZMIANA: Konwersja Double (DTO) -> BigDecimal (Entity)
                 .price(BigDecimal.valueOf(dto.getPrice()))
                 .category(dto.getCategory())
                 .images(images)
@@ -67,7 +66,6 @@ public class ProductService {
                 .location(dto.getLocation())
                 .weight(dto.getWeight())
                 .weightUnit(dto.getWeightUnit())
-                .deleted(false) // Ustawiamy domyślny stan
                 .build();
 
         product = productRepository.save(product);
