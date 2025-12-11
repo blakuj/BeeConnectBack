@@ -94,4 +94,14 @@ public class ReservationController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/area/{areaId}/occupied")
+    public ResponseEntity<List<String>> getOccupiedDates(@PathVariable Long areaId) {
+        try {
+            List<String> dates = reservationService.getOccupiedDates(areaId);
+            return ResponseEntity.ok(dates);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }

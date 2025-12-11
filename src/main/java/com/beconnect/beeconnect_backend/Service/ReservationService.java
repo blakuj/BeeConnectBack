@@ -18,7 +18,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,9 +56,8 @@ public class ReservationService {
         Area area = areaRepository.findById(dto.getAreaId())
                 .orElseThrow(() -> new RuntimeException("Area not found"));
 
-        // Sprawdź czy obszar jest dostępny
         if (area.getAvailabilityStatus() != AvailabilityStatus.AVAILABLE) {
-            throw new RuntimeException("Area is not available for reservation");
+            throw new RuntimeException("Area is currently disabled by the owner");
         }
 
         // Sprawdź czy użytkownik nie jest właścicielem
@@ -82,6 +84,7 @@ public class ReservationService {
             throw new RuntimeException("End date must be after start date");
         }
 
+
         BigDecimal pricePerDay = BigDecimal.valueOf(area.getPricePerDay());
         BigDecimal daysBD = BigDecimal.valueOf(days);
         BigDecimal totalPrice = pricePerDay.multiply(daysBD);
@@ -91,16 +94,13 @@ public class ReservationService {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + tenant.getBalance() + " PLN");
         }
 
-        // POBIERZ ŚRODKI - odejmowanie
         tenant.setBalance(tenant.getBalance().subtract(totalPrice));
         personRepository.save(tenant);
 
-        // DODAJ ŚRODKI WŁAŚCICIELOWI - dodawanie
         Person owner = area.getOwner();
         owner.setBalance(owner.getBalance().add(totalPrice));
         personRepository.save(owner);
 
-        // Utwórz rezerwację jako CONFIRMED od razu
         Reservation reservation = Reservation.builder()
                 .area(area)
                 .tenant(tenant)
@@ -109,7 +109,7 @@ public class ReservationService {
                 .numberOfHives(dto.getNumberOfHives())
                 .totalPrice(totalPrice)
                 .pricePerDay(BigDecimal.valueOf(area.getPricePerDay()))
-                .status(ReservationStatus.ACTIVE)
+                .status(ReservationStatus.CONFIRMED)
                 .confirmedAt(LocalDateTime.now())
                 .notes(dto.getNotes())
                 .build();
@@ -124,9 +124,6 @@ public class ReservationService {
                 currentUser.getFirstname() + " " + currentUser.getLastname(),
                 reservation.getId()
         );
-
-        area.setAvailabilityStatus(AvailabilityStatus.UNAVAILABLE);
-        areaRepository.save(area);
 
         return mapToDTO(reservation);
     }
@@ -169,10 +166,6 @@ public class ReservationService {
         personRepository.save(tenant);
         personRepository.save(owner);
 
-        // Uwolnij obszar
-        Area area = reservation.getArea();
-        area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
-        areaRepository.save(area);
 
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservation.setCancelledAt(LocalDateTime.now());
@@ -183,9 +176,7 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
-    /**
-     * Pobierz wszystkie rezerwacje użytkownika (jako najemca)
-     */
+    // ... (metody getMyReservations, getReservationById bez zmian) ...
     public List<ReservationResponseDTO> getMyReservations() {
         Person tenant = personService.getProfile();
         List<Reservation> reservations = reservationRepository.findByTenant(tenant);
@@ -194,9 +185,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Pobierz rezerwacje według statusu
-     */
     public List<ReservationResponseDTO> getMyReservationsByStatus(ReservationStatus status) {
         Person tenant = personService.getProfile();
         List<Reservation> reservations = reservationRepository.findByTenantAndStatus(tenant, status);
@@ -205,9 +193,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Pobierz rezerwacje dla obszarów użytkownika (jako właściciel)
-     */
     public List<ReservationResponseDTO> getReservationsForMyAreas() {
         Person owner = personService.getProfile();
         List<Area> myAreas = areaRepository.findByOwner(owner);
@@ -218,16 +203,12 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Pobierz szczegóły rezerwacji
-     */
     public ReservationResponseDTO getReservationById(Long id) {
         Person currentUser = personService.getProfile();
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        // Sprawdź uprawnienia
         boolean isTenant = reservation.getTenant().getId().equals(currentUser.getId());
         boolean isOwner = reservation.getArea().getOwner().getId().equals(currentUser.getId());
 
@@ -239,7 +220,7 @@ public class ReservationService {
     }
 
     /**
-     * Zaktualizuj statusy rezerwacji - tylko ACTIVE → COMPLETED
+     * Zaktualizuj statusy rezerwacji - tylko ACTIVE -> COMPLETED
      */
     @Transactional
     public void updateReservationStatuses() {
@@ -250,12 +231,6 @@ public class ReservationService {
 
         for (Reservation reservation : toComplete) {
             reservation.setStatus(ReservationStatus.COMPLETED);
-
-            // Uwolnij obszar
-            Area area = reservation.getArea();
-            // Usunięto: area.setTenant(null);
-            area.setAvailabilityStatus(AvailabilityStatus.AVAILABLE);
-            areaRepository.save(area);
 
             reservationRepository.save(reservation);
         }
@@ -273,8 +248,27 @@ public class ReservationService {
     }
 
     /**
-     * Walidacja danych rezerwacji
+     * Pobierz listę wszystkich zajętych dat dla danego obszaru
      */
+    public List<String> getOccupiedDates(Long areaId) {
+        List<Reservation> reservations = reservationRepository.findByAreaIdAndStatusIn(
+                areaId,
+                List.of(ReservationStatus.CONFIRMED, ReservationStatus.ACTIVE)
+        );
+
+        Set<String> occupiedDates = new HashSet<>();
+
+        for (Reservation res : reservations) {
+            LocalDate start = res.getStartDate();
+            LocalDate end = res.getEndDate();
+
+            start.datesUntil(end.plusDays(1))
+                    .forEach(date -> occupiedDates.add(date.toString()));
+        }
+
+        return new ArrayList<>(occupiedDates);
+    }
+
     private void validateReservationData(CreateReservationDTO dto) {
         if (dto.getAreaId() == null) {
             throw new RuntimeException("Area ID is required");
@@ -293,9 +287,6 @@ public class ReservationService {
         }
     }
 
-    /**
-     * Mapowanie Reservation → ReservationResponseDTO
-     */
     private ReservationResponseDTO mapToDTO(Reservation reservation) {
         Area area = reservation.getArea();
         Person tenant = reservation.getTenant();
@@ -305,7 +296,7 @@ public class ReservationService {
                 .id(reservation.getId())
                 .areaId(area.getId())
                 .areaName(area.getName())
-                .areaType(area.getFlowers().stream().findFirst().get().getName())
+                .areaType(area.getFlowers().stream().findFirst().map(f -> f.getName()).orElse("Nieznany"))
                 .tenantId(tenant.getId())
                 .tenantFirstname(tenant.getFirstname())
                 .tenantLastname(tenant.getLastname())

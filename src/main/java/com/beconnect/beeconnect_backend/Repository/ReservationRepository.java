@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection; // Dodano import
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // Znajdź wszystkie rezerwacje dla danego obszaru
     List<Reservation> findByArea(Area area);
+
+    // NOWE: Znajdź rezerwacje dla obszaru o określonych statusach (do kalendarza)
+    List<Reservation> findByAreaIdAndStatusIn(Long areaId, Collection<ReservationStatus> statuses);
 
     // Znajdź aktywne rezerwacje dla obszaru
     List<Reservation> findByAreaAndStatus(Area area, ReservationStatus status);
