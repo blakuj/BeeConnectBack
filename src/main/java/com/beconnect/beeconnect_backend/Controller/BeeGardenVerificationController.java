@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.Controller;
 
 import com.beconnect.beeconnect_backend.DTO.VerificationDTO;
 import com.beconnect.beeconnect_backend.Service.BeeGardenVerificationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ public class BeeGardenVerificationController {
     BeeGardenVerificationService beeGardenVerificationService;
 
     @PostMapping("/submit")
-    public ResponseEntity<?> submit(@RequestPart("file") MultipartFile file,
+    public ResponseEntity<?> submit(@Valid @RequestPart("file") MultipartFile file,
                                    @RequestPart("verificationDTO") VerificationDTO verificationDTO){
         try {
             beeGardenVerificationService.submitAnApplication(file, verificationDTO);

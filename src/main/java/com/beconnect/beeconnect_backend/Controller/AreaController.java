@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.DTO.AreaDTO;
 import com.beconnect.beeconnect_backend.DTO.EditAreaDTO;
 import com.beconnect.beeconnect_backend.Service.AreaService;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class AreaController {
     private AreaService areaService;
 
     @PostMapping("/addArea")
-    public ResponseEntity<?> addArea(@RequestBody AreaDTO areaDto) {
+    public ResponseEntity<?> addArea(@Valid @RequestBody AreaDTO areaDto) {
         try {
             areaService.addArea(areaDto);
             return ResponseEntity.ok("Area added successfully");
@@ -55,7 +56,7 @@ public class AreaController {
     }
 
     @PutMapping("/editArea")
-    public ResponseEntity<?> editArea(@RequestBody EditAreaDTO editAreaDTO) {
+    public ResponseEntity<?> editArea(@Valid @RequestBody EditAreaDTO editAreaDTO) {
         areaService.editArea(editAreaDTO);
         return ResponseEntity.ok("Area updated successfully");
     }

@@ -6,6 +6,7 @@ import com.beconnect.beeconnect_backend.DTO.PersonDTO;
 import com.beconnect.beeconnect_backend.DTO.UpdateProfileDTO;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Service.PersonService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class PersonController {
 
 
     @PutMapping("/updateProfile")
-    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileDTO dto) {
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UpdateProfileDTO dto) {
         try {
             personService.updateProfile(dto);
             return ResponseEntity.ok().build();
@@ -45,7 +46,7 @@ public class PersonController {
     }
 
     @PutMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO dto) {
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
         try {
             personService.changePassword(dto);
             return ResponseEntity.ok().build();
@@ -55,7 +56,7 @@ public class PersonController {
     }
 
     @PutMapping("/addFunds")
-    public ResponseEntity<?> addFunds(@RequestBody AddFundsDTO addFundsDTO){
+    public ResponseEntity<?> addFunds(@Valid @RequestBody AddFundsDTO addFundsDTO){
         personService.addFunds(addFundsDTO.getAmount());
         return ResponseEntity.ok().build();
     }

@@ -3,6 +3,7 @@ package com.beconnect.beeconnect_backend.Controller;
 import com.beconnect.beeconnect_backend.DTO.CreateOrderDTO;
 import com.beconnect.beeconnect_backend.DTO.OrderDTO;
 import com.beconnect.beeconnect_backend.Service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class OrderController {
      * Utwórz zamówienie (kup produkt)
      */
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody CreateOrderDTO dto) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderDTO dto) {
         try {
             OrderDTO order = orderService.createOrder(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(order);

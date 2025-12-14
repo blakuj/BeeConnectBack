@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.DTO.CreateReservationDTO;
 import com.beconnect.beeconnect_backend.DTO.ReservationResponseDTO;
 import com.beconnect.beeconnect_backend.Enum.ReservationStatus;
 import com.beconnect.beeconnect_backend.Service.ReservationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class ReservationController {
 
 
     @PostMapping
-    public ResponseEntity<?> createReservation(@RequestBody CreateReservationDTO dto) {
+    public ResponseEntity<?> createReservation(@Valid @RequestBody CreateReservationDTO dto) {
         try {
             ReservationResponseDTO reservation = reservationService.createReservation(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(reservation);

@@ -27,5 +27,6 @@ public class CreateReservationDTO {
     @Min(value = 1, message = "Musisz zarezerwować przynajmniej 1 ul")
     private Integer numberOfHives;
 
+    @Size(max = 500, message = "Notatki mogą mieć max 500 znaków")
     private String notes;
 }

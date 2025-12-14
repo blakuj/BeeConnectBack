@@ -9,6 +9,7 @@ import com.beconnect.beeconnect_backend.Service.AuthService;
 import com.beconnect.beeconnect_backend.Service.PersonService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterDTO request, HttpServletResponse response) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterDTO request, HttpServletResponse response) {
         try {
             String token = authService.register(request);
             setJwtCookie(token, response);
@@ -44,7 +45,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDTO request, HttpServletResponse response) {
+    public ResponseEntity<String> login(@Valid @RequestBody LoginDTO request, HttpServletResponse response) {
         try {
             System.out.println("Processing login request for: " + request.getLogin());
             String token = authService.login(request);

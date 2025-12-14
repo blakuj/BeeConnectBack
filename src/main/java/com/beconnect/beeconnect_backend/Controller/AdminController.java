@@ -5,6 +5,7 @@ import com.beconnect.beeconnect_backend.DTO.VerificationDecisionDTO;
 import com.beconnect.beeconnect_backend.DTO.VerificationResponseDTO;
 import com.beconnect.beeconnect_backend.Enum.Status;
 import com.beconnect.beeconnect_backend.Service.AdminService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -84,7 +85,7 @@ public class AdminController {
      * Body: { verificationId, approved, comment }
      */
     @PostMapping("/verifications/process")
-    public ResponseEntity<?> processVerification(@RequestBody VerificationDecisionDTO decision) {
+    public ResponseEntity<?> processVerification(@Valid @RequestBody VerificationDecisionDTO decision) {
         try {
             if (decision.getVerificationId() == null || decision.getApproved() == null) {
                 return ResponseEntity.badRequest().body("Missing required fields");

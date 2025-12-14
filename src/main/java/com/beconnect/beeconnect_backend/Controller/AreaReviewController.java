@@ -3,6 +3,7 @@ package com.beconnect.beeconnect_backend.Controller;
 import com.beconnect.beeconnect_backend.DTO.AreaReviewDTO;
 import com.beconnect.beeconnect_backend.DTO.CreateAreaReviewDTO;
 import com.beconnect.beeconnect_backend.Service.AreaReviewService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class AreaReviewController {
      * Utwórz opinię o obszarze
      */
     @PostMapping
-    public ResponseEntity<?> createReview(@RequestBody CreateAreaReviewDTO dto) {
+    public ResponseEntity<?> createReview(@Valid @RequestBody CreateAreaReviewDTO dto) {
         try {
             AreaReviewDTO review = reviewService.createReview(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(review);
