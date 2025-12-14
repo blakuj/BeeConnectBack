@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.HashSet;
@@ -21,10 +22,12 @@ public class Flower {
 
     @Column(nullable = false, unique = true)
     @NotBlank
+    @Size(max = 50, message = "Nazwa kwiata max 50 znaków")
     private String name;
 
     @Column(nullable = false)
     @NotBlank
+    @Size(min = 4, max = 9, message = "Kolor musi być w formacie HEX (np. #FFFFFF)")
     private String color;
 
     @ManyToMany(mappedBy = "flowers")

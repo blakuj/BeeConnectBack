@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.math.BigDecimal; // Import BigDecimal
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,24 +27,28 @@ public class Person {
     private Long id;
 
     @NotBlank
-    @Size(min = 2, max = 50)
+    @Size(min = 2, max = 50, message = "Imię musi mieć od 2 do 50 znaków")
     private String firstname;
 
     @NotBlank
-    @Size(min = 2, max = 50)
+    @Size(min = 2, max = 50, message = "Nazwisko musi mieć od 2 do 50 znaków")
     private String lastname;
 
+    @Size(max = 20, message = "Numer telefonu nie może przekraczać 20 znaków")
     private String phone;
 
     @NotBlank
     @Email
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
+    @Size(max = 100, message = "Email nie może przekraczać 100 znaków")
     private String email;
 
     @NotBlank
+    @Size(min = 4, max = 50, message = "Login musi mieć od 4 do 50 znaków")
     private String login;
 
     @NotBlank
+    @Size(max = 100, message = "Hasło jest zbyt długie")
     private String password;
 
     @Column(precision = 19, scale = 2)
@@ -78,6 +82,7 @@ public class Person {
             balance = BigDecimal.ZERO;
         }
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

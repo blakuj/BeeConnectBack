@@ -26,14 +26,17 @@ public class Product {
 
     @Column(nullable = false)
     @NotBlank
+    @Size(max = 100, message = "Nazwa produktu nie może przekraczać 100 znaków")
     private String name;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 2000, message = "Opis produktu nie może przekraczać 2000 znaków")
     private String description;
 
     @Column(nullable = false, precision = 19, scale = 2)
     @NotNull
     @Positive
+    @Max(value = 1000000, message = "Cena produktu przekracza dopuszczalny limit")
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
@@ -51,7 +54,7 @@ public class Product {
     @Column(nullable = false)
     @NotNull
     @Min(0)
-    @Max(999)
+    @Max(value = 1000, message = "Stan magazynowy nie może przekraczać 1000 sztuk")
     private Integer stock;
 
     @Column(nullable = false)
@@ -71,8 +74,14 @@ public class Product {
     @NotNull
     private Person seller;
 
+    @Size(max = 255, message = "Lokalizacja zbyt długa")
     private String location;
+
+    @Positive
+    @Max(value = 100000, message = "Waga jest zbyt duża")
     private Double weight;
+
+    @Size(max = 10, message = "Jednostka wagi max 10 znaków")
     private String weightUnit;
 
     @PrePersist

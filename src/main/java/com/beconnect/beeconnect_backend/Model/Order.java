@@ -2,9 +2,7 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.OrderStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -37,6 +35,7 @@ public class Order {
 
     @Column(nullable = false)
     @Min(1)
+    @Max(value = 10000, message = "Maksymalna ilość produktów w jednym zamówieniu to 10000") // Upper bound
     private Integer quantity;
 
     @Column(nullable = false, precision = 19, scale = 2)
@@ -57,13 +56,14 @@ public class Order {
 
     private LocalDateTime deliveredAt;
 
+    @Size(max = 255, message = "Adres dostawy nie może przekraczać 255 znaków")
     private String deliveryAddress;
 
+    @Size(max = 500, message = "Notatki do zamówienia nie mogą przekraczać 500 znaków")
     private String buyerNotes;
 
     @PrePersist
     protected void onCreate() {
         orderedAt = LocalDateTime.now();
     }
-
 }

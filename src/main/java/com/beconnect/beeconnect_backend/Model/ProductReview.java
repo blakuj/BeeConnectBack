@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class ProductReview {
     private Integer rating;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 1000, message = "Komentarz nie może przekraczać 1000 znaków")
     private String comment;
 
     @Column(nullable = false)

@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.ReservationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -66,9 +67,11 @@ public class Reservation {
     private LocalDateTime cancelledAt;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 500, message = "Notatki nie mogą przekraczać 500 znaków")
     private String notes;
 
     @Column
+    @Size(max = 255, message = "Powód anulowania zbyt długi")
     private String cancellationReason;
 
     @OneToOne(mappedBy = "reservation", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

@@ -2,10 +2,7 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.SoftDelete;
 import org.locationtech.jts.geom.Polygon;
@@ -47,15 +44,19 @@ public class Area {
     private List<Image> images = new ArrayList<>();
 
     @Positive
+    @Max(value = 50000000, message = "Powierzchnia obszaru jest zbyt duża (max 5000ha)")
     private double area;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 3000, message = "Opis obszaru nie może przekraczać 3000 znaków")
     private String description;
 
     @Min(1)
+    @Max(value = 500, message = "Maksymalna liczba uli na obszarze to 500")
     private int maxHives;
 
     @PositiveOrZero
+    @Max(value = 100000, message = "Cena za dzień jest zbyt wysoka")
     private double pricePerDay;
 
     private LocalDate availableFrom;
@@ -72,6 +73,7 @@ public class Area {
     private String imgBase64;
 
     @NotBlank
+    @Size(min = 3, max = 100, message = "Nazwa obszaru musi mieć od 3 do 100 znaków")
     private String name;
 
     @Builder.Default
