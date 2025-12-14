@@ -1,6 +1,7 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.HashSet;
@@ -19,9 +20,11 @@ public class Flower {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @NotBlank
     private String name;
 
     @Column(nullable = false)
+    @NotBlank
     private String color;
 
     @ManyToMany(mappedBy = "flowers")

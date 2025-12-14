@@ -1,6 +1,9 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,7 +21,8 @@ public class ProductReview {
     private Long id;
 
     @Column(nullable = false)
-    private Integer rating; // 1-5
+    @Min(1) @Max(5)
+    private Integer rating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
@@ -28,6 +32,7 @@ public class ProductReview {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false, unique = true)
+    @NotNull
     private Order order;
 
     @PrePersist

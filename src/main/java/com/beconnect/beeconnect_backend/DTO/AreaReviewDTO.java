@@ -16,15 +16,12 @@ public class AreaReviewDTO {
     private String comment;
     private LocalDateTime createdAt;
 
-    // Reviewer info
     private Long reviewerId;
     private String reviewerFirstname;
     private String reviewerLastname;
 
-    // Area info
     private Long areaId;
     private String areaName;
 
-    // Reservation info
     private Long reservationId;
 }

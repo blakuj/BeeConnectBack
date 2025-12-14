@@ -2,6 +2,9 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal; // Import BigDecimal
@@ -23,11 +26,25 @@ public class Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @Size(min = 2, max = 50)
     private String firstname;
+
+    @NotBlank
+    @Size(min = 2, max = 50)
     private String lastname;
+
     private String phone;
+
+    @NotBlank
+    @Email
+    @Column(unique = true)
     private String email;
+
+    @NotBlank
     private String login;
+
+    @NotBlank
     private String password;
 
     @Column(precision = 19, scale = 2)
@@ -61,7 +78,6 @@ public class Person {
             balance = BigDecimal.ZERO;
         }
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

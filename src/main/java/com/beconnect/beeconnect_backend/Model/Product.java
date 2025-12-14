@@ -2,10 +2,9 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,16 +25,20 @@ public class Product {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank
     private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false, precision = 19, scale = 2)
+    @NotNull
+    @Positive
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @NotNull
     private ProductCategory category;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -46,6 +49,9 @@ public class Product {
     private List<Conversation> conversations = new ArrayList<>();
 
     @Column(nullable = false)
+    @NotNull
+    @Min(0)
+    @Max(999)
     private Integer stock;
 
     @Column(nullable = false)
@@ -62,6 +68,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
+    @NotNull
     private Person seller;
 
     private String location;

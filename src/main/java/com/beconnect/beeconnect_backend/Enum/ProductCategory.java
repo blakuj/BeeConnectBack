@@ -8,5 +8,6 @@ public enum ProductCategory {
     ROYAL_JELLY,// Mleczko pszczele
     HONEYCOMB,  // Plaster miodu
     EQUIPMENT,  // Sprzęt pszczelarski
+    BEE_BREAD,  //pierzga
     OTHER       // Inne
 }

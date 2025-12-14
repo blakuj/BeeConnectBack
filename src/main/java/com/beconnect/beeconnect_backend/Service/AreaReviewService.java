@@ -72,8 +72,6 @@ public class AreaReviewService {
     public List<AreaReviewDTO> getAreaReviews(Long areaId) {
         Area area = areaRepository.findById(areaId)
                 .orElseThrow(() -> new RuntimeException("Area not found"));
-
-        // ZMIANA: nowa metoda repozytorium
         List<AreaReview> reviews = reviewRepository.findByReservationAreaOrderByCreatedAtDesc(area);
         return reviews.stream()
                 .map(this::mapToDTO)
@@ -82,7 +80,6 @@ public class AreaReviewService {
 
     public List<AreaReviewDTO> getMyReviews() {
         Person currentUser = personService.getProfile();
-        // ZMIANA: nowa metoda repozytorium
         List<AreaReview> reviews = reviewRepository.findByReservationTenantOrderByCreatedAtDesc(currentUser);
         return reviews.stream()
                 .map(this::mapToDTO)
@@ -90,7 +87,6 @@ public class AreaReviewService {
     }
 
     public boolean canReviewReservation(Long reservationId) {
-        // ... (bez zmian) ...
         Person currentUser = personService.getProfile();
         Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
         if (reservation == null) return false;
@@ -111,7 +107,6 @@ public class AreaReviewService {
     }
 
     private AreaReviewDTO mapToDTO(AreaReview review) {
-        // ZMIANA: Pobieramy dane przez relację reservation
         Person reviewer = review.getReservation().getTenant();
         Area area = review.getReservation().getArea();
 

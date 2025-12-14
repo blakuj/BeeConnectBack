@@ -1,6 +1,7 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -21,10 +22,12 @@ public class Conversation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyer_id", nullable = false)
+    @NotNull
     private Person buyer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
+    @NotNull
     private Product product;
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -41,7 +44,4 @@ public class Conversation {
         lastMessageAt = LocalDateTime.now();
     }
 
-    public Person getSeller() {
-        return product != null ? product.getSeller() : null;
-    }
 }

@@ -1,6 +1,8 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -19,13 +21,16 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", nullable = false)
+    @NotNull
     private Conversation conversation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
+    @NotNull
     private Person sender;
 
     @Column(nullable = false, columnDefinition = "TEXT")
+    @NotBlank
     private String content;
 
     @Column(nullable = false)

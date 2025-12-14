@@ -1,6 +1,7 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.HashSet;
@@ -19,21 +20,24 @@ public class Badge {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String code; // np. "FREQUENT_SELLER", "TRUSTED_SELLER"
+    @NotBlank
+    private String code;
 
     @Column(nullable = false)
-    private String name; // np. "Częste nowości"
+    @NotBlank
+    private String name;
 
     @Column(columnDefinition = "TEXT")
-    private String description; // Opis jak zdobyć odznakę
+    private String description;
 
     @Column(nullable = false)
-    private String icon; // Font Awesome class, np. "fas fa-fire"
+    @NotBlank
+    private String icon;
 
     @Column(nullable = false)
-    private String color; // Kolor odznaki w hex, np. "#FFD700"
+    @NotBlank
+    private String color;
 
-    // Relacja Many-to-Many z Person
     @ManyToMany(mappedBy = "badges")
     private Set<Person> persons = new HashSet<>();
 }

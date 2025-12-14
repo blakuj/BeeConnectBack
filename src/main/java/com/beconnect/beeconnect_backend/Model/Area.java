@@ -2,6 +2,10 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import org.hibernate.annotations.SoftDelete;
 import org.locationtech.jts.geom.Polygon;
@@ -42,13 +46,18 @@ public class Area {
     @JoinColumn(name = "area_id")
     private List<Image> images = new ArrayList<>();
 
+    @Positive
     private double area;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Min(1)
     private int maxHives;
+
+    @PositiveOrZero
     private double pricePerDay;
+
     private LocalDate availableFrom;
     private LocalDate endDate;
 
@@ -62,6 +71,7 @@ public class Area {
     @Lob
     private String imgBase64;
 
+    @NotBlank
     private String name;
 
     @Builder.Default
