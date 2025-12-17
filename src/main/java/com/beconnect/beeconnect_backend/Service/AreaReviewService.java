@@ -87,12 +87,7 @@ public class AreaReviewService {
     }
 
     public boolean canReviewReservation(Long reservationId) {
-        Person currentUser = personService.getProfile();
-        Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
-        if (reservation == null) return false;
-        if (!reservation.getTenant().getId().equals(currentUser.getId())) return false;
-        if (reservation.getStatus() != ReservationStatus.CONFIRMED) return false;
-        return !reviewRepository.existsByReservation(reservation);
+        return !reviewRepository.existsByReservationId(reservationId);
     }
 
     @Transactional

@@ -13,6 +13,8 @@ import java.util.Optional;
 
 public interface AreaReviewRepository extends JpaRepository<AreaReview, Long> {
 
+    boolean existsByReservationId(Long reservationId);
+
     List<AreaReview> findByReservationAreaOrderByCreatedAtDesc(Area area);
 
     Optional<AreaReview> findByReservation(Reservation reservation);

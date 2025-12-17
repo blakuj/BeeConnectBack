@@ -42,7 +42,7 @@ public class AreaDTO {
     private String ownerFirstName;
     private String ownerLastName;
     private LocalDate availableFrom;
-
+    private LocalDate endDate;
     private List<String> images;
 
     @NotBlank(message = "Nazwa obszaru jest wymagana")
