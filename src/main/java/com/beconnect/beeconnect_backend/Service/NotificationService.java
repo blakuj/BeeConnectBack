@@ -180,6 +180,18 @@ public class NotificationService {
         );
     }
 
+    public void notifyOrderStatusChange(Long recipientId, String productName, String newStatus, Long orderId) {
+        createNotification(
+                recipientId,
+                NotificationType.ORDER_SHIPPED,
+                "Status zamówienia",
+                productName+" został zmieniony na "+newStatus,
+                "profile.html",
+                orderId
+        );
+    }
+
+
     /**
      * Powiadomienie o potwierdzeniu rezerwacji
      */
@@ -221,6 +233,9 @@ public class NotificationService {
                 orderId
         );
     }
+
+
+
 
     /**
      * Mapowanie Notification → NotificationDTO

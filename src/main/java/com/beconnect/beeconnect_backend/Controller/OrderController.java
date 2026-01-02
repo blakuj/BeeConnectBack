@@ -35,6 +35,21 @@ public class OrderController {
     }
 
     /**
+     * PUT /api/orders/{id}/status?status={NEW_STATUS}
+     * Zmień status zamówienia (np. na SHIPPED, COMPLETED)
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            OrderDTO order = orderService.updateOrderStatus(id, status);
+            return ResponseEntity.ok(order);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/orders/my-purchases
      * Pobierz historię zakupów zalogowanego użytkownika
      */

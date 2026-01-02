@@ -94,14 +94,13 @@ public class OrderService {
 
         productRepository.save(product);
 
-        // Zapisz zamówienie
         Order order = Order.builder()
                 .buyer(buyer)
                 .product(product)
                 .quantity(dto.getQuantity())
                 .pricePerUnit(pricePerUnit)
                 .totalPrice(totalPrice)
-                .status(OrderStatus.COMPLETED)
+                .status(OrderStatus.CONFIRMED)
                 .deliveryAddress(dto.getDeliveryAddress())
                 .buyerNotes(dto.getBuyerNotes())
                 .build();
@@ -117,6 +116,38 @@ public class OrderService {
                 order.getId()
         );
 
+        return mapToDTO(order);
+    }
+
+    /**
+     * Zaktualizuj status zamówienia (dla Sprzedawcy)
+     */
+    @Transactional
+    public OrderDTO updateOrderStatus(Long orderId, String statusString) {
+        Person currentUser = personService.getProfile();
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getProduct().getSeller().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You don't have permission to update this order");
+        }
+
+        try {
+            OrderStatus newStatus = OrderStatus.valueOf(statusString.toUpperCase());
+            order.setStatus(newStatus);
+
+            notificationService.notifyOrderStatusChange(
+                    order.getBuyer().getId(),
+                    order.getProduct().getName(),
+                    newStatus.name(),
+                    order.getId()
+            );
+
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status");
+        }
+
+        order = orderRepository.save(order);
         return mapToDTO(order);
     }
 
