@@ -1,0 +1,96 @@
+-- 1. Odznaka: Nowicjusz (NEWBIE)
+IF NOT EXISTS (SELECT 1 FROM badge WHERE code = 'NEWBIE')
+BEGIN
+    INSERT INTO badge (code, name, description, icon, color)
+    VALUES ('NEWBIE', 'Nowicjusz', 'Posiada przynajmniej jeden obszar lub produkt.', 'fas fa-seedling', '#51CF66');
+END
+
+-- 2. Odznaka: Potentat (TYCOON)
+IF NOT EXISTS (SELECT 1 FROM badge WHERE code = 'TYCOON')
+BEGIN
+    INSERT INTO badge (code, name, description, icon, color)
+    VALUES ('TYCOON', 'Potentat', 'Posiada 5 lub więcej obszarów na własność.', 'fas fa-crown', '#FFD700');
+END
+
+-- 3. Odznaka: Zaufany Sprzedawca (TRUSTED_SELLER)
+IF NOT EXISTS (SELECT 1 FROM badge WHERE code = 'TRUSTED_SELLER')
+BEGIN
+    INSERT INTO badge (code, name, description, icon, color)
+    VALUES ('TRUSTED_SELLER', 'Zaufany Sprzedawca', 'Średnia ocen produktów > 4.5 (przy min. 5 ocenach).', 'fas fa-check-circle', '#339AF0');
+END
+
+
+CREATE OR ALTER TRIGGER trg_Badge_Product_Insert
+ON product
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO person_badges (person_id, badge_id)
+    SELECT DISTINCT i.seller_id, 1
+    FROM inserted i
+    WHERE NOT EXISTS (SELECT 1 FROM person_badges pb WHERE pb.person_id = i.seller_id AND pb.badge_id = 1);
+END;
+GO
+
+CREATE OR ALTER TRIGGER trg_Badge_Area_Insert
+ON area
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO person_badges (person_id, badge_id)
+    SELECT DISTINCT i.owner_id, 1
+    FROM inserted i
+    WHERE NOT EXISTS (SELECT 1 FROM person_badges pb WHERE pb.person_id = i.owner_id AND pb.badge_id = 1);
+
+    INSERT INTO person_badges (person_id, badge_id)
+    SELECT DISTINCT i.owner_id, 2
+    FROM inserted i
+    WHERE (SELECT COUNT(*) FROM area a WHERE a.owner_id = i.owner_id) >= 5
+    AND NOT EXISTS (SELECT 1 FROM person_badges pb WHERE pb.person_id = i.owner_id AND pb.badge_id = 2);
+END;
+GO
+
+CREATE OR ALTER TRIGGER trg_Badge_Review_Insert
+ON product_review
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+
+    INSERT INTO person_badges (person_id, badge_id)
+    SELECT DISTINCT p.seller_id, 3
+    FROM inserted i
+    JOIN orders o ON i.order_id = o.id
+    JOIN product p ON o.product_id = p.id
+    WHERE
+        (SELECT COUNT(pr.id)
+         FROM product_review pr
+         JOIN orders ord ON pr.order_id = ord.id
+         JOIN product prod ON ord.product_id = prod.id
+         WHERE prod.seller_id = p.seller_id) >= 5
+    AND
+        (SELECT AVG(CAST(pr.rating AS FLOAT))
+         FROM product_review pr
+         JOIN orders ord ON pr.order_id = ord.id
+         JOIN product prod ON ord.product_id = prod.id
+         WHERE prod.seller_id = p.seller_id) > 4.5
+    AND NOT EXISTS (SELECT 1 FROM person_badges pb WHERE pb.person_id = p.seller_id AND pb.badge_id = 3);
+END;
+GO
+
+
+CREATE OR ALTER PROCEDURE sp_DeactivateExpiredAreas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE area
+    SET availability_status = 'UNAVAILABLE'
+    WHERE availability_status = 'AVAILABLE'
+      AND end_date < CAST(GETDATE() AS DATE);
+END;
+GO
