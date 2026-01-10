@@ -50,34 +50,5 @@ public class BadgeController {
         }
     }
 
-    /**
-     * POST /api/badges/check
-     * Sprawdź i przyznaj odznaki zalogowanemu użytkownikowi
-     */
-    @PostMapping("/check")
-    public ResponseEntity<List<BadgeDTO>> checkAndAwardBadges() {
-        try {
-            Long userId = personService.getProfile().getId();
-            badgeService.checkAndAwardBadges(userId);
-            List<BadgeDTO> badges = badgeService.getUserBadges(userId);
-            return ResponseEntity.ok(badges);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(403).body(null);
-        }
-    }
 
-    /**
-     * POST /api/badges/initialize
-     * Inicjalizacja domyślnych odznak (tylko dla admina/developera)
-     */
-    @PostMapping("/initialize")
-    public ResponseEntity<String> initializeBadges() {
-        try {
-            badgeService.initializeDefaultBadges();
-            return ResponseEntity.ok("Default badges initialized");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
 }

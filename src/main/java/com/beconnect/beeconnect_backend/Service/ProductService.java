@@ -70,13 +70,6 @@ public class ProductService {
 
         product = productRepository.save(product);
 
-        // Sprawdzenie odznak
-        try {
-            badgeService.checkAndAwardBadges(personService.getProfile().getId());
-        } catch (Exception e) {
-            System.err.println("Error checking badges: " + e.getMessage());
-        }
-
         return mapToDTO(product);
     }
 
