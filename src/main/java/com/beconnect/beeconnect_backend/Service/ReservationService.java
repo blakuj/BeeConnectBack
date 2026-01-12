@@ -176,7 +176,6 @@ public class ReservationService {
         return mapToDTO(reservation);
     }
 
-    // ... (metody getMyReservations, getReservationById bez zmian) ...
     public List<ReservationResponseDTO> getMyReservations() {
         Person tenant = personService.getProfile();
         List<Reservation> reservations = reservationRepository.findByTenant(tenant);

@@ -3,10 +3,12 @@ package com.beconnect.beeconnect_backend.Service;
 import com.beconnect.beeconnect_backend.DTO.CreateProductDTO;
 import com.beconnect.beeconnect_backend.DTO.ProductDTO;
 import com.beconnect.beeconnect_backend.DTO.UpdateProductDTO;
+import com.beconnect.beeconnect_backend.Enum.OrderStatus;
 import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import com.beconnect.beeconnect_backend.Model.Image;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Model.Product;
+import com.beconnect.beeconnect_backend.Repository.OrderRepository;
 import com.beconnect.beeconnect_backend.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,10 +26,10 @@ public class ProductService {
     private ProductRepository productRepository;
 
     @Autowired
-    private PersonService personService;
+    private OrderRepository orderRepository;
 
     @Autowired
-    private BadgeService badgeService;
+    private PersonService personService;
 
     @Transactional
     public ProductDTO addProduct(CreateProductDTO dto) {
@@ -162,6 +164,19 @@ public class ProductService {
         if (!product.getSeller().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You don't have permission to delete this product");
         }
+
+        List<OrderStatus> activeStatuses = List.of(
+                OrderStatus.PENDING,
+                OrderStatus.CONFIRMED,
+                OrderStatus.PROCESSING,
+                OrderStatus.SHIPPED,
+                OrderStatus.DELIVERED
+        );
+
+        if (orderRepository.existsByProduct_IdAndStatusIn(id, activeStatuses)) {
+            throw new RuntimeException("Nie można usunąć produktu, który jest częścią aktywnego zamówienia. Zakończ zamówienia przed usunięciem.");
+        }
+
 
         productRepository.delete(product);
     }

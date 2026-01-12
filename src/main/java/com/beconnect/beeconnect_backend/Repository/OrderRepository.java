@@ -1,5 +1,6 @@
 package com.beconnect.beeconnect_backend.Repository;
 
+import com.beconnect.beeconnect_backend.Enum.OrderStatus;
 import com.beconnect.beeconnect_backend.Model.Order;
 import com.beconnect.beeconnect_backend.Model.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o WHERE o.buyer = :buyer ORDER BY o.orderedAt DESC")
     List<Order> findRecentOrdersByBuyer(@Param("buyer") Person buyer);
+
+    boolean existsByProduct_IdAndStatusIn(Long productId, List<OrderStatus> statuses);
 }
