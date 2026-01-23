@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.Service;
 
 import com.beconnect.beeconnect_backend.DTO.AreaReviewDTO;
 import com.beconnect.beeconnect_backend.DTO.CreateAreaReviewDTO;
+import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import com.beconnect.beeconnect_backend.Enum.ReservationStatus;
 import com.beconnect.beeconnect_backend.Model.Area;
 import com.beconnect.beeconnect_backend.Model.AreaReview;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,7 +57,6 @@ public class AreaReviewService {
             throw new RuntimeException("You have already reviewed this reservation");
         }
 
-        // ZMIANA: Nie ustawiamy już reviewer i area
         AreaReview review = AreaReview.builder()
                 .rating(dto.getRating())
                 .comment(dto.getComment())
@@ -92,11 +93,10 @@ public class AreaReviewService {
 
     @Transactional
     public void updateAreaRating(Area area) {
-        Double averageRating = reviewRepository.getAverageRatingByArea(area);
-        // ZMIANA: nowa metoda repozytorium
+        BigDecimal averageRating = reviewRepository.getAverageRatingByArea(area);
         long reviewCount = reviewRepository.countByReservationArea(area);
 
-        area.setAverageRating(averageRating != null ? averageRating : 0.0);
+        area.setAverageRating(averageRating != null ? averageRating : BigDecimal.ZERO);
         area.setReviewCount((int) reviewCount);
         areaRepository.save(area);
     }

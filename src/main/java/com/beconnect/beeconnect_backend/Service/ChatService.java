@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,7 @@ public class ChatService {
     private PersonRepository personRepository;
 
     @Autowired
-    private ProductRepository productRepository; // Potrzebne do pobrania produktu
+    private ProductRepository productRepository;
 
     @Autowired
     private PersonService personService;
@@ -44,7 +45,6 @@ public class ChatService {
     public List<ConversationDTO> getMyConversations() {
         Person currentUser = personService.getProfile();
 
-        // ZMIANA: Szukamy po nowym query (jako kupujący lub sprzedawca produktu)
         List<Conversation> conversations = conversationRepository.findAllByParticipant(currentUser);
 
         return conversations.stream()
@@ -62,7 +62,6 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        // ZMIANA: Weryfikacja uczestnictwa (metoda pomocnicza poniżej)
         if (!isUserParticipant(conversation, currentUser)) {
             throw new RuntimeException("You don't have access to this conversation");
         }
@@ -101,7 +100,6 @@ public class ChatService {
 
         message = messageRepository.save(message);
 
-        // ZMIANA: Pobieranie drugiego uczestnika nową metodą
         Person otherUser = getOtherParticipant(conversation, currentUser);
 
         notificationService.notifyNewMessage(
@@ -120,13 +118,11 @@ public class ChatService {
     public ConversationDTO startConversation(StartConversationDTO dto) {
         Person currentUser = personService.getProfile();
 
-        // ZMIANA: Pobieramy Produkt, a nie usera bezpośrednio
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         Person seller = product.getSeller();
 
-        // Sprawdź czy użytkownik nie pisze sam do siebie (jest sprzedawcą)
         if (seller.getId().equals(currentUser.getId())) {
             throw new RuntimeException("You cannot start a conversation about your own product");
         }
@@ -223,6 +219,12 @@ public class ChatService {
         String lastMsgContent = "";
         LocalDateTime lastMsgTime = conversation.getStartedAt();
 
+        String base64Image = null;
+        if (!conversation.getProduct().getImages().isEmpty()
+                && conversation.getProduct().getImages().getFirst().getFileContent() != null) {
+            base64Image = Base64.getEncoder().encodeToString(conversation.getProduct().getImages().getFirst().getFileContent());
+        }
+
 
         return ConversationDTO.builder()
                 .id(conversation.getId())
@@ -232,12 +234,12 @@ public class ChatService {
                 .otherUserEmail(otherUser.getEmail())
                 .productId(conversation.getProduct().getId())
                 .productName(conversation.getProduct().getName())
-                .productImage(conversation.getProduct().getImages().isEmpty() ? null : conversation.getProduct().getImages().get(0).getFileContent())
+                .productImage(base64Image)
 
                 .lastMessageContent(lastMsgContent)
                 .lastMessageAt(lastMsgTime)
                 .unreadCount((int) unreadCount)
-                .createdAt(conversation.getStartedAt()) // lub getCreatedAt
+                .createdAt(conversation.getStartedAt())
                 .build();
     }
 

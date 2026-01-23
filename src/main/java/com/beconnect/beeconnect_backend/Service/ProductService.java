@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,6 @@ public class ProductService {
     public ProductDTO addProduct(CreateProductDTO dto) {
         Person seller = personService.getProfile();
 
-        // Walidacja
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             throw new RuntimeException("Product name is required");
         }
@@ -50,7 +50,7 @@ public class ProductService {
         List<Image> images = new ArrayList<>();
         if (dto.getImages() != null) {
             images = dto.getImages().stream()
-                    .map(base64 -> Image.builder().fileContent(base64).build())
+                    .map(this::decodeImage)
                     .collect(Collectors.toList());
         }
 
@@ -62,7 +62,7 @@ public class ProductService {
                 .images(images)
                 .stock(dto.getStock())
                 .available(true)
-                .rating(0.0)
+                .rating(BigDecimal.ZERO)
                 .reviewCount(0)
                 .seller(seller)
                 .location(dto.getLocation())
@@ -98,8 +98,8 @@ public class ProductService {
         if (dto.getImages() != null) {
             product.getImages().clear();
             List<Image> newImages = dto.getImages().stream()
-                    .map(base64 -> Image.builder().fileContent(base64).build())
-                    .collect(Collectors.toList());
+                    .map(this::decodeImage)
+                    .toList();
             product.getImages().addAll(newImages);
         }
 
@@ -198,7 +198,10 @@ public class ProductService {
 
     private ProductDTO mapToDTO(Product product) {
         List<String> images = product.getImages().stream()
-                .map(Image::getFileContent)
+                .map(image -> {
+                    if (image.getFileContent() == null) return null;
+                    return Base64.getEncoder().encodeToString(image.getFileContent());
+                })
                 .collect(Collectors.toList());
 
         return ProductDTO.builder()
@@ -221,6 +224,23 @@ public class ProductService {
                 .location(product.getLocation())
                 .weight(product.getWeight())
                 .weightUnit(product.getWeightUnit())
+                .build();
+    }
+
+    private Image decodeImage(String base64Image) {
+        if (base64Image == null || base64Image.isEmpty()) {
+            return null;
+        }
+        String cleanedBase64 = base64Image;
+
+        if (base64Image.contains(",")) {
+            cleanedBase64 = base64Image.split(",")[1];
+        }
+
+        byte[] decodedBytes = Base64.getDecoder().decode(cleanedBase64);
+
+        return Image.builder()
+                .fileContent(decodedBytes)
                 .build();
     }
 }

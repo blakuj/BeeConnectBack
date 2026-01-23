@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +51,6 @@ public class ProductReviewService {
             throw new RuntimeException("You have already reviewed this order");
         }
 
-        // ZMIANA: Nie ustawiamy product
         ProductReview review = ProductReview.builder()
                 .rating(dto.getRating())
                 .comment(dto.getComment())
@@ -68,7 +68,6 @@ public class ProductReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // ZMIANA: nowa metoda repozytorium
         List<ProductReview> reviews = reviewRepository.findByOrderProductOrderByCreatedAtDesc(product);
         return reviews.stream()
                 .map(this::mapToDTO)
@@ -77,7 +76,6 @@ public class ProductReviewService {
 
     public List<ProductReviewDTO> getMyReviews() {
         Person currentUser = personService.getProfile();
-        // Ta metoda repozytorium była już poprawna (przechodziła przez OrderBuyer)
         List<ProductReview> reviews = reviewRepository.findByOrderBuyerOrderByCreatedAtDesc(currentUser);
         return reviews.stream()
                 .map(this::mapToDTO)
@@ -85,7 +83,6 @@ public class ProductReviewService {
     }
 
     public boolean canReviewOrder(Long orderId) {
-        // ... (bez zmian) ...
         Person currentUser = personService.getProfile();
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) return false;
@@ -95,11 +92,10 @@ public class ProductReviewService {
 
     @Transactional
     public void updateProductRating(Product product) {
-        Double averageRating = reviewRepository.getAverageRatingByProduct(product);
-        // ZMIANA: nowa metoda repozytorium
+        BigDecimal averageRating = reviewRepository.getAverageRatingByProduct(product);
         long reviewCount = reviewRepository.countByOrderProduct(product);
 
-        product.setRating(averageRating != null ? averageRating : 0.0);
+        product.setRating(averageRating != null ? averageRating : BigDecimal.ZERO);
         product.setReviewCount((int) reviewCount);
         productRepository.save(product);
     }

@@ -8,14 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Long> {
 
     List<ProductReview> findByOrderProductOrderByCreatedAtDesc(Product product);
-
-    Optional<ProductReview> findByOrder(Order order);
 
     boolean existsByOrder(Order order);
 
@@ -24,5 +23,5 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
     long countByOrderProduct(Product product);
 
     @Query("SELECT AVG(pr.rating) FROM ProductReview pr WHERE pr.order.product = :product")
-    Double getAverageRatingByProduct(@Param("product") Product product);
+    BigDecimal getAverageRatingByProduct(@Param("product") Product product);
 }

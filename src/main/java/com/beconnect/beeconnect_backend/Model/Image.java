@@ -1,7 +1,7 @@
 package com.beconnect.beeconnect_backend.Model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -16,8 +16,9 @@ public class Image {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @Lob
-    @Column(nullable = false)
-    @NotBlank
-    private String fileContent;
+    @Column(nullable = false, columnDefinition = "VARBINARY(MAX)")
+    @NotNull
+    private byte[] fileContent;
 }

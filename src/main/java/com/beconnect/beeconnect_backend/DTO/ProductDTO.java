@@ -3,6 +3,7 @@ package com.beconnect.beeconnect_backend.DTO;
 import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,18 +22,16 @@ public class ProductDTO {
     private List<String> images;
     private Integer stock;
     private Boolean available;
-    private Double rating;
+    private BigDecimal rating;
     private Integer reviewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Dane sprzedawcy
     private Long sellerId;
     private String sellerFirstname;
     private String sellerLastname;
     private String sellerEmail;
 
-    // Dodatkowe informacje
     private String location;
     private Double weight;
     private String weightUnit;

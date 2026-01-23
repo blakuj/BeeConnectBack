@@ -91,7 +91,6 @@ public class AdminController {
                 return ResponseEntity.badRequest().body("Missing required fields");
             }
 
-            // Jeśli odrzucamy, wymagamy komentarza
             if (!decision.getApproved() && (decision.getComment() == null || decision.getComment().trim().isEmpty())) {
                 return ResponseEntity.badRequest().body("Comment is required when rejecting");
             }

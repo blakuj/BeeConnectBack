@@ -16,5 +16,5 @@ public class DocumentDTO {
     private Long id;
     private String type;
     private String filePath;
-    private String fileName; // Tylko nazwa pliku, bez pełnej ścieżki
+    private String fileName;
 }

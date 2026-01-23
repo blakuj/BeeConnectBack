@@ -16,15 +16,12 @@ public class ProductReviewDTO {
     private String comment;
     private LocalDateTime createdAt;
 
-    // Reviewer info
     private Long reviewerId;
     private String reviewerFirstname;
     private String reviewerLastname;
 
-    // Product info
     private Long productId;
     private String productName;
 
-    // Order info
     private Long orderId;
 }

@@ -1,5 +1,6 @@
 package com.beconnect.beeconnect_backend.Controller;
 
+import com.beconnect.beeconnect_backend.DTO.AreaDTO;
 import com.beconnect.beeconnect_backend.DTO.CreateReservationDTO;
 import com.beconnect.beeconnect_backend.DTO.ReservationResponseDTO;
 import com.beconnect.beeconnect_backend.Enum.ReservationStatus;

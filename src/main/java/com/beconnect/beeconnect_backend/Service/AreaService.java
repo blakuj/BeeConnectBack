@@ -8,11 +8,10 @@ import com.beconnect.beeconnect_backend.Model.Area;
 import com.beconnect.beeconnect_backend.Model.Flower;
 import com.beconnect.beeconnect_backend.Model.Image;
 import com.beconnect.beeconnect_backend.Model.Person;
-import com.beconnect.beeconnect_backend.Model.Reservation;
 import com.beconnect.beeconnect_backend.Repository.AreaRepository;
 import com.beconnect.beeconnect_backend.Repository.FlowerRepository;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
-import com.beconnect.beeconnect_backend.Repository.ReservationRepository;
+
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
@@ -21,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -32,13 +32,10 @@ public class AreaService {
     private final AreaRepository areaRepository;
     private final PersonRepository personRepository;
     private final PersonService personService;
-    private final GeometryFactory geometryFactory = new GeometryFactory(); // Fabryka geometrii
+    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Autowired
     private FlowerRepository flowerRepository;
-
-    @Autowired
-    private ReservationRepository reservationRepository;
 
     public AreaService(AreaRepository areaRepository, PersonRepository personRepository, PersonService personService) {
         this.areaRepository = areaRepository;
@@ -65,23 +62,16 @@ public class AreaService {
         return flowers;
     }
 
-    // Konwersja DTO (Lista List) -> JTS Polygon
     private Polygon createPolygonFromCoordinates(List<List<Double>> coordinatesDto) {
         if (coordinatesDto == null || coordinatesDto.size() < 3) {
             throw new IllegalArgumentException("Polygon must have at least 3 points");
         }
 
-        // Konwertujemy listę list na tablicę Coordinate
         List<Coordinate> points = new ArrayList<>();
         for (List<Double> point : coordinatesDto) {
-            // Leaflet wysyła [lat, lng], a JTS zazwyczaj oczekuje [x, y] (lng, lat)
-            // Jednak w MSSQL dla typu geography kolejność to lat, long.
-            // Dla typu geometry to x, y.
-            // Zakładając spójność z frontendem, zachowajmy kolejność z DTO.
             points.add(new Coordinate(point.get(0), point.get(1)));
         }
 
-        // Polygon musi być zamknięty (pierwszy punkt == ostatni punkt)
         if (!points.get(0).equals(points.get(points.size() - 1))) {
             points.add(points.get(0));
         }
@@ -91,14 +81,12 @@ public class AreaService {
         return geometryFactory.createPolygon(shell);
     }
 
-    // Konwersja JTS Polygon -> DTO (Lista List)
     private List<List<Double>> convertPolygonToDto(Polygon polygon) {
         if (polygon == null) return new ArrayList<>();
 
         List<List<Double>> result = new ArrayList<>();
         Coordinate[] coordinates = polygon.getExteriorRing().getCoordinates();
 
-        // Pomijamy ostatni punkt, jeśli jest taki sam jak pierwszy (żeby nie dublować na froncie, choć Leaflet to zniesie)
         int length = coordinates.length;
         if (length > 1 && coordinates[0].equals(coordinates[length - 1])) {
             length--;
@@ -118,11 +106,11 @@ public class AreaService {
         List<Image> images = new ArrayList<>();
         if (areaDto.getImages() != null) {
             images = areaDto.getImages().stream()
-                    .map(base64 -> Image.builder().fileContent(base64).build())
+                    .map(this::decodeImage)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         }
 
-        // Tworzenie poligonu
         Polygon polygon = createPolygonFromCoordinates(areaDto.getCoordinates());
 
         Area area = Area.builder()
@@ -138,7 +126,7 @@ public class AreaService {
                 .owner(owner)
                 .availabilityStatus(AvailabilityStatus.AVAILABLE)
                 .name(areaDto.getName())
-                .averageRating(0.0)
+                .averageRating(BigDecimal.ZERO)
                 .reviewCount(0)
                 .build();
 
@@ -155,7 +143,8 @@ public class AreaService {
             if (editAreaDTO.getImages() != null) {
                 area.getImages().clear();
                 List<Image> newImages = editAreaDTO.getImages().stream()
-                        .map(base64 -> Image.builder().fileContent(base64).build())
+                        .map(this::decodeImage)
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList());
                 area.getImages().addAll(newImages);
             }
@@ -170,8 +159,6 @@ public class AreaService {
             area.setPricePerDay(editAreaDTO.getPricePerDay());
             area.setMaxHives(editAreaDTO.getMaxHives());
             area.setAvailabilityStatus(editAreaDTO.getAvailabilityStatus());
-
-            // Jeśli w EditAreaDTO przychodziłyby koordynaty, tu też trzeba by je zaktualizować na Polygon
 
             areaRepository.save(area);
         });
@@ -189,20 +176,6 @@ public class AreaService {
                 .collect(Collectors.toList());
     }
 
-    public List<AreaDTO> getRentedAreas() {
-        Person currentUser = personService.getProfile();
-
-        List<Reservation> activeReservations = reservationRepository.findByTenant(currentUser);
-
-        return activeReservations.stream()
-                .map(reservation -> {
-                    Area area = reservation.getArea();
-                    AreaDTO dto = this.mapToDTO(area);
-                    dto.setReservationId(reservation.getId());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-    }
 
     @Transactional
     public void deleteArea(Long id) {
@@ -214,7 +187,8 @@ public class AreaService {
         List<List<Double>> coords = convertPolygonToDto(area.getPolygon());
 
         List<String> images = area.getImages().stream()
-                .map(Image::getFileContent)
+                .map(img -> img.getFileContent() != null ? Base64.getEncoder().encodeToString(img.getFileContent()) : null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         Set<FlowerDTO> flowerDTOs = area.getFlowers().stream()
@@ -240,8 +214,20 @@ public class AreaService {
                 .availableFrom(area.getAvailableFrom())
                 .endDate(area.getEndDate())
                 .name(area.getName())
-                .averageRating(area.getAverageRating() != null ? area.getAverageRating() : 0.0)
+                .averageRating(area.getAverageRating() != null ? area.getAverageRating() : BigDecimal.ZERO)
                 .reviewCount(area.getReviewCount() != null ? area.getReviewCount() : 0)
                 .build();
+    }
+
+    private Image decodeImage(String base64Image) {
+        if (base64Image == null || base64Image.isEmpty()) {
+            return null;
+        }
+        String cleanedBase64 = base64Image;
+        if (base64Image.contains(",")) {
+            cleanedBase64 = base64Image.split(",")[1];
+        }
+        byte[] decodedBytes = Base64.getDecoder().decode(cleanedBase64);
+        return Image.builder().fileContent(decodedBytes).build();
     }
 }

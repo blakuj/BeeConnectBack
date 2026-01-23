@@ -20,14 +20,12 @@ public class VerificationResponseDTO {
     private LocalDateTime reviewedDate;
     private String reviewedBy;
 
-    // Dane użytkownika
     private Long personId;
     private String firstname;
     private String lastname;
     private String email;
     private String phone;
 
-    // Dane pasieki
     private String beeGardenName;
     private String beeGardenAddress;
     private Integer hiveCount;

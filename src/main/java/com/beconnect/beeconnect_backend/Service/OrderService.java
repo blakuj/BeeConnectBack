@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,36 +43,29 @@ public class OrderService {
     public OrderDTO createOrder(CreateOrderDTO dto) {
         Person buyer = personService.getProfile();
 
-        // Walidacja ilości
         if (dto.getQuantity() == null || dto.getQuantity() <= 0) {
             throw new RuntimeException("Quantity must be greater than 0");
         }
 
-        // Pobierz produkt
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Sprawdź dostępność
         if (!product.getAvailable()) {
             throw new RuntimeException("Product is not available");
         }
 
-        // Sprawdź stock
         if (product.getStock() < dto.getQuantity()) {
             throw new RuntimeException("Insufficient stock. Available: " + product.getStock());
         }
 
-        // Sprawdź czy użytkownik nie kupuje własnego produktu
         if (product.getSeller().getId().equals(buyer.getId())) {
             throw new RuntimeException("You cannot buy your own product");
         }
 
-        // Obliczenia finansowe na BigDecimal
         BigDecimal quantity = BigDecimal.valueOf(dto.getQuantity());
         BigDecimal pricePerUnit = product.getPrice();
         BigDecimal totalPrice = pricePerUnit.multiply(quantity);
 
-        // Sprawdź saldo kupującego
         if (buyer.getBalance().compareTo(totalPrice) < 0) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + buyer.getBalance() + " PLN");
         }
@@ -85,7 +79,6 @@ public class OrderService {
         seller.setBalance(seller.getBalance().add(totalPrice));
         personRepository.save(seller);
 
-        // Aktualizacja stanu magazynowego
         product.setStock(product.getStock() - dto.getQuantity());
 
         if (product.getStock() == 0) {
@@ -107,7 +100,6 @@ public class OrderService {
 
         order = orderRepository.save(order);
 
-        // Wyślij powiadomienie
         Person currentUser = personService.getProfile();
         notificationService.notifyNewOrder(
                 product.getSeller().getId(),
@@ -218,7 +210,10 @@ public class OrderService {
     private OrderDTO mapToDTO(Order order) {
         String productImage = null;
         if (order.getProduct().getImages() != null && !order.getProduct().getImages().isEmpty()) {
-            productImage = order.getProduct().getImages().get(0).getFileContent();
+            byte[] imgBytes = order.getProduct().getImages().get(0).getFileContent();
+            if (imgBytes != null) {
+                productImage = Base64.getEncoder().encodeToString(imgBytes);
+            }
         }
 
         Person seller = order.getProduct().getSeller();

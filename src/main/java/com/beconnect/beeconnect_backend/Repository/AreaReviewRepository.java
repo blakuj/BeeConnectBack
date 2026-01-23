@@ -8,16 +8,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 public interface AreaReviewRepository extends JpaRepository<AreaReview, Long> {
 
     boolean existsByReservationId(Long reservationId);
 
     List<AreaReview> findByReservationAreaOrderByCreatedAtDesc(Area area);
-
-    Optional<AreaReview> findByReservation(Reservation reservation);
 
     boolean existsByReservation(Reservation reservation);
 
@@ -26,5 +24,5 @@ public interface AreaReviewRepository extends JpaRepository<AreaReview, Long> {
     long countByReservationArea(Area area);
 
     @Query("SELECT AVG(ar.rating) FROM AreaReview ar WHERE ar.reservation.area = :area")
-    Double getAverageRatingByArea(@Param("area") Area area);
+    BigDecimal getAverageRatingByArea(@Param("area") Area area);
 }

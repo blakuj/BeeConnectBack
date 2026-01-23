@@ -60,7 +60,8 @@ public class Product {
     @Column(nullable = false)
     private Boolean available = true;
 
-    private Double rating = 0.0;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal rating;
     private Integer reviewCount = 0;
 
     @Column(nullable = false)
@@ -88,7 +89,7 @@ public class Product {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (rating == null) rating = 0.0;
+        if (rating == null) rating = BigDecimal.ZERO;
         if (reviewCount == null) reviewCount = 0;
     }
 

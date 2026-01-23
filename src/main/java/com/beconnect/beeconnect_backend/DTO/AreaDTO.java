@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class AreaDTO {
 
     @PositiveOrZero(message = "Cena za dzień nie może być ujemna")
     @Max(value = 100000, message = "Cena za dzień jest zbyt wysoka")
-    private double pricePerDay;
+    private BigDecimal pricePerDay;
 
     private AvailabilityStatus status;
     private String ownerFirstName;
@@ -49,7 +50,7 @@ public class AreaDTO {
     @Size(min = 3, max = 100, message = "Nazwa obszaru musi mieć od 3 do 100 znaków")
     private String name;
 
-    private Double averageRating;
+    private BigDecimal averageRating;
     private Integer reviewCount;
     private Long reservationId;
 }

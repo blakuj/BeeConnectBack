@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.SoftDelete;
 import org.locationtech.jts.geom.Polygon;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,8 +57,9 @@ public class Area {
     private int maxHives;
 
     @PositiveOrZero
+    @Column(precision = 19, scale = 2)
     @Max(value = 100000, message = "Cena za dzień jest zbyt wysoka")
-    private double pricePerDay;
+    private BigDecimal pricePerDay;
 
     private LocalDate availableFrom;
     private LocalDate endDate;
@@ -77,7 +79,8 @@ public class Area {
     private String name;
 
     @Builder.Default
-    private Double averageRating = 0.0;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal averageRating = BigDecimal.ZERO;
 
     @Builder.Default
     private Integer reviewCount = 0;

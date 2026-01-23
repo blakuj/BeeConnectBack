@@ -4,6 +4,7 @@ import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class EditAreaDTO {
     private int maxHives;
 
     @PositiveOrZero(message = "Cena nie może być ujemna")
-    private float pricePerDay;
+    private BigDecimal pricePerDay;
 
     private String description;
 

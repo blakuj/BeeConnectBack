@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(
         info = @Info(title = "BeeConnect API", version = "1.0"),
-        security = @SecurityRequirement(name = "basicAuth") // 👈 domyślna autoryzacja
+        security = @SecurityRequirement(name = "basicAuth")
 )
 @SecurityScheme(
         name = "basicAuth",

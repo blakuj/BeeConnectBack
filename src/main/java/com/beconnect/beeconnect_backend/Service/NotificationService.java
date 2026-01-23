@@ -68,7 +68,6 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
-        // Sprawdź czy powiadomienie należy do użytkownika
         if (!notification.getUser().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Access denied");
         }
@@ -119,7 +118,6 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
-        // Sprawdź czy powiadomienie należy do użytkownika
         if (!notification.getUser().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Access denied");
         }

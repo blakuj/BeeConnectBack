@@ -16,12 +16,12 @@ public class CreateProductDTO {
     private String name;
 
     @NotBlank(message = "Opis produktu jest wymagany")
-    @Size(min = 10, max = 2000, message = "Opis produktu musi mieć od 10 do 2000 znaków") // Dodano max
+    @Size(min = 10, max = 2000, message = "Opis produktu musi mieć od 10 do 2000 znaków")
     private String description;
 
     @NotNull(message = "Cena jest wymagana")
     @Positive(message = "Cena musi być większa od 0")
-    @Max(value = 1000000, message = "Cena przekracza limit") // Dodano
+    @Max(value = 1000000, message = "Cena przekracza limit")
     private Double price;
 
     @NotNull(message = "Kategoria jest wymagana")
