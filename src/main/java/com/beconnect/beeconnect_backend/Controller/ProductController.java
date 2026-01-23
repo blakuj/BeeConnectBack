@@ -5,6 +5,7 @@ import com.beconnect.beeconnect_backend.DTO.ProductDTO;
 import com.beconnect.beeconnect_backend.DTO.UpdateProductDTO;
 import com.beconnect.beeconnect_backend.Enum.ProductCategory;
 import com.beconnect.beeconnect_backend.Service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -140,7 +141,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addProduct(@RequestBody CreateProductDTO dto) {
+    public ResponseEntity<?> addProduct(@Valid @RequestBody CreateProductDTO dto) {
         try {
             ProductDTO product = productService.addProduct(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(product);
@@ -156,7 +157,7 @@ public class ProductController {
      */
 
     @PutMapping
-    public ResponseEntity<?> updateProduct(@RequestBody UpdateProductDTO dto) {
+    public ResponseEntity<?> updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
         try {
             ProductDTO product = productService.updateProduct(dto);
             return ResponseEntity.ok(product);

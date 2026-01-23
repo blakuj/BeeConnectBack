@@ -1,0 +1,28 @@
+package com.beconnect.beeconnect_backend.Repository;
+
+import com.beconnect.beeconnect_backend.Model.Area;
+import com.beconnect.beeconnect_backend.Model.AreaReview;
+import com.beconnect.beeconnect_backend.Model.Person;
+import com.beconnect.beeconnect_backend.Model.Reservation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+public interface AreaReviewRepository extends JpaRepository<AreaReview, Long> {
+
+    boolean existsByReservationId(Long reservationId);
+
+    List<AreaReview> findByReservationAreaOrderByCreatedAtDesc(Area area);
+
+    boolean existsByReservation(Reservation reservation);
+
+    List<AreaReview> findByReservationTenantOrderByCreatedAtDesc(Person tenant);
+
+    long countByReservationArea(Area area);
+
+    @Query("SELECT AVG(ar.rating) FROM AreaReview ar WHERE ar.reservation.area = :area")
+    BigDecimal getAverageRatingByArea(@Param("area") Area area);
+}

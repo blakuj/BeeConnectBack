@@ -56,7 +56,7 @@ public class AdminService {
                 .totalAreas(areaRepository.count())
                 .availableAreas(areaRepository.countByAvailabilityStatus(AvailabilityStatus.AVAILABLE))
                 .reservedAreas(areaRepository.countByAvailabilityStatus(AvailabilityStatus.UNAVAILABLE))
-                .totalProducts(0L) // TODO: gdy dodamy produkty
+                .totalProducts(0L)
                 .adminsCount(personRepository.countByRole(Role.ADMIN))
                 .build();
     }
@@ -95,22 +95,18 @@ public class AdminService {
      */
     @Transactional
     public void processVerification(VerificationDecisionDTO decision) {
-        // Pobierz obecnego admina
         Person admin = personService.getProfile();
         if (admin.getRole() != Role.ADMIN) {
             throw new RuntimeException("Only admins can process verifications");
         }
 
-        // Pobierz wniosek
         BeeGardenVerification verification = verificationRepository.findById(decision.getVerificationId())
                 .orElseThrow(() -> new RuntimeException("Verification not found"));
 
-        // Sprawdź czy wniosek nie jest już rozpatrzony
         if (verification.getStatus() != Status.PENDING) {
             throw new RuntimeException("This verification has already been processed");
         }
 
-        // Ustaw status
         verification.setStatus(decision.getApproved() ? Status.APPROVED : Status.REJECTED);
         verification.setComment(decision.getComment());
         verification.setReviewedDate(LocalDateTime.now());
@@ -135,7 +131,6 @@ public class AdminService {
     private VerificationResponseDTO mapToDTO(BeeGardenVerification verification) {
         Person person = verification.getPerson();
 
-        // Znajdź BeeGarden powiązany z tym użytkownikiem
         BeeGarden beeGarden = beeGardenRepository.findByPerson(person).stream()
                 .findFirst()
                 .orElse(null);

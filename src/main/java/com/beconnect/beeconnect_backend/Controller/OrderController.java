@@ -3,6 +3,7 @@ package com.beconnect.beeconnect_backend.Controller;
 import com.beconnect.beeconnect_backend.DTO.CreateOrderDTO;
 import com.beconnect.beeconnect_backend.DTO.OrderDTO;
 import com.beconnect.beeconnect_backend.Service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +24,25 @@ public class OrderController {
      * Utwórz zamówienie (kup produkt)
      */
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody CreateOrderDTO dto) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderDTO dto) {
         try {
             OrderDTO order = orderService.createOrder(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(order);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/orders/{id}/status?status={NEW_STATUS}
+     * Zmień status zamówienia (np. na SHIPPED, COMPLETED)
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            OrderDTO order = orderService.updateOrderStatus(id, status);
+            return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));

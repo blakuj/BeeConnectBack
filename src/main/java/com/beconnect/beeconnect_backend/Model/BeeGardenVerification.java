@@ -2,6 +2,8 @@ package com.beconnect.beeconnect_backend.Model;
 
 import com.beconnect.beeconnect_backend.Enum.Status;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,9 +26,11 @@ public class BeeGardenVerification {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @NotNull
     private Status status = Status.PENDING;
 
     @Column(name = "comment", columnDefinition = "TEXT")
+    @Size(max = 1000, message = "Komentarz weryfikacyjny max 1000 znaków")
     private String comment;
 
     @Column(name = "creation_date")
@@ -36,10 +40,12 @@ public class BeeGardenVerification {
     private LocalDateTime reviewedDate;
 
     @Column(name = "reviewed_by")
+    @Size(max = 100)
     private String reviewedBy;
 
     @ManyToOne
     @JoinColumn(name = "person_id", nullable = false)
+    @NotNull
     private Person person;
 
     @OneToMany(mappedBy = "verification", cascade = CascadeType.ALL, orphanRemoval = true)

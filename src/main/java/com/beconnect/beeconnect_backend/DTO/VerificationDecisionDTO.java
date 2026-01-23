@@ -1,5 +1,6 @@
 package com.beconnect.beeconnect_backend.DTO;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -9,7 +10,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class VerificationDecisionDTO {
+    @NotNull(message = "ID weryfikacji jest wymagane")
     private Long verificationId;
-    private Boolean approved; // true = zatwierdź, false = odrzuć
-    private String comment; // Komentarz admina
+
+    @NotNull(message = "Decyzja (zatwierdź/odrzuć) jest wymagana")
+    private Boolean approved;
+
+    private String comment;
 }

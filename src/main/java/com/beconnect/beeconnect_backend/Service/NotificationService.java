@@ -68,7 +68,6 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
-        // Sprawdź czy powiadomienie należy do użytkownika
         if (!notification.getUser().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Access denied");
         }
@@ -119,7 +118,6 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
-        // Sprawdź czy powiadomienie należy do użytkownika
         if (!notification.getUser().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Access denied");
         }
@@ -175,10 +173,22 @@ public class NotificationService {
                 NotificationType.AREA_RESERVED,
                 "Nowa rezerwacja",
                 renterName + " zarezerwował Twój obszar: " + areaName,
-                "my-areas.html",
+                "profile.html",
                 reservationId
         );
     }
+
+    public void notifyOrderStatusChange(Long recipientId, String productName, String newStatus, Long orderId) {
+        createNotification(
+                recipientId,
+                NotificationType.ORDER_SHIPPED,
+                "Status zamówienia",
+                productName+" został zmieniony na "+newStatus,
+                "profile.html",
+                orderId
+        );
+    }
+
 
     /**
      * Powiadomienie o potwierdzeniu rezerwacji
@@ -189,7 +199,7 @@ public class NotificationService {
                 NotificationType.RESERVATION_CONFIRMED,
                 "Rezerwacja potwierdzona",
                 "Twoja rezerwacja obszaru \"" + areaName + "\" została potwierdzona",
-                "reservations.html",
+                "profile.html",
                 reservationId
         );
     }
@@ -217,10 +227,13 @@ public class NotificationService {
                 NotificationType.NEW_ORDER,
                 "Nowe zamówienie",
                 buyerName + " kupił Twój produkt: " + productName,
-                "orders.html",
+                "profile.html",
                 orderId
         );
     }
+
+
+
 
     /**
      * Mapowanie Notification → NotificationDTO

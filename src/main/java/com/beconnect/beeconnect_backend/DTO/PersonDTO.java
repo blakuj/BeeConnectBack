@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.DTO;
 
 import com.beconnect.beeconnect_backend.Enum.Role;
 import lombok.*;
+import java.math.BigDecimal; // Import
 
 @Data
 @NoArgsConstructor
@@ -15,5 +16,5 @@ public class PersonDTO {
     String email;
     String phone;
     Role role;
-    float balance;
+    BigDecimal balance; 
 }

@@ -2,18 +2,28 @@ package com.beconnect.beeconnect_backend.Service;
 
 import com.beconnect.beeconnect_backend.DTO.AreaDTO;
 import com.beconnect.beeconnect_backend.DTO.EditAreaDTO;
+import com.beconnect.beeconnect_backend.DTO.FlowerDTO;
 import com.beconnect.beeconnect_backend.Enum.AvailabilityStatus;
 import com.beconnect.beeconnect_backend.Model.Area;
+import com.beconnect.beeconnect_backend.Model.Flower;
+import com.beconnect.beeconnect_backend.Model.Image;
 import com.beconnect.beeconnect_backend.Model.Person;
 import com.beconnect.beeconnect_backend.Repository.AreaRepository;
+import com.beconnect.beeconnect_backend.Repository.FlowerRepository;
 import com.beconnect.beeconnect_backend.Repository.PersonRepository;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +32,10 @@ public class AreaService {
     private final AreaRepository areaRepository;
     private final PersonRepository personRepository;
     private final PersonService personService;
+    private final GeometryFactory geometryFactory = new GeometryFactory();
+
+    @Autowired
+    private FlowerRepository flowerRepository;
 
     public AreaService(AreaRepository areaRepository, PersonRepository personRepository, PersonService personService) {
         this.areaRepository = areaRepository;
@@ -29,26 +43,130 @@ public class AreaService {
         this.personService = personService;
     }
 
+    private Set<Flower> processFlowers(Set<FlowerDTO> flowerDTOs) {
+        Set<Flower> flowers = new HashSet<>();
+        if (flowerDTOs != null) {
+            for (FlowerDTO fDto : flowerDTOs) {
+                if (fDto.getName() != null && !fDto.getName().trim().isEmpty()) {
+                    Flower flower = flowerRepository.findByName(fDto.getName())
+                            .orElseGet(() -> flowerRepository.save(
+                                    Flower.builder()
+                                            .name(fDto.getName())
+                                            .color(fDto.getColor() != null ? fDto.getColor() : "#888888")
+                                            .build()
+                            ));
+                    flowers.add(flower);
+                }
+            }
+        }
+        return flowers;
+    }
+
+    private Polygon createPolygonFromCoordinates(List<List<Double>> coordinatesDto) {
+        if (coordinatesDto == null || coordinatesDto.size() < 3) {
+            throw new IllegalArgumentException("Polygon must have at least 3 points");
+        }
+
+        List<Coordinate> points = new ArrayList<>();
+        for (List<Double> point : coordinatesDto) {
+            points.add(new Coordinate(point.get(0), point.get(1)));
+        }
+
+        if (!points.get(0).equals(points.get(points.size() - 1))) {
+            points.add(points.get(0));
+        }
+
+        Coordinate[] coordinatesArray = points.toArray(new Coordinate[0]);
+        LinearRing shell = geometryFactory.createLinearRing(coordinatesArray);
+        return geometryFactory.createPolygon(shell);
+    }
+
+    private List<List<Double>> convertPolygonToDto(Polygon polygon) {
+        if (polygon == null) return new ArrayList<>();
+
+        List<List<Double>> result = new ArrayList<>();
+        Coordinate[] coordinates = polygon.getExteriorRing().getCoordinates();
+
+        int length = coordinates.length;
+        if (length > 1 && coordinates[0].equals(coordinates[length - 1])) {
+            length--;
+        }
+
+        for (int i = 0; i < length; i++) {
+            result.add(List.of(coordinates[i].x, coordinates[i].y));
+        }
+        return result;
+    }
+
+    @Transactional
     public void addArea(AreaDTO areaDto) {
         Person owner = personService.getProfile();
+        Set<Flower> flowers = processFlowers(areaDto.getFlowers());
+
+        List<Image> images = new ArrayList<>();
+        if (areaDto.getImages() != null) {
+            images = areaDto.getImages().stream()
+                    .map(this::decodeImage)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
+
+        Polygon polygon = createPolygonFromCoordinates(areaDto.getCoordinates());
 
         Area area = Area.builder()
-                .type(areaDto.getType())
-                .coordinates(
-                        areaDto.getCoordinates().stream()
-                                .map(coord -> coord.get(0) + "," + coord.get(1))
-                                .collect(Collectors.toList())
-                )
+                .flowers(flowers)
+                .images(images)
+                .polygon(polygon)
                 .area(areaDto.getArea())
                 .description(areaDto.getDescription())
                 .maxHives(areaDto.getMaxHives())
                 .pricePerDay(areaDto.getPricePerDay())
                 .availableFrom(LocalDate.from(LocalDateTime.now()))
+                .endDate(LocalDate.now().plusMonths(1))
                 .owner(owner)
                 .availabilityStatus(AvailabilityStatus.AVAILABLE)
+                .name(areaDto.getName())
+                .averageRating(BigDecimal.ZERO)
+                .reviewCount(0)
                 .build();
 
         areaRepository.save(area);
+    }
+
+    @Transactional
+    public void editArea(EditAreaDTO editAreaDTO) {
+        Optional<Area> toEdit = areaRepository.findById(editAreaDTO.getId());
+
+        toEdit.ifPresent(area -> {
+            area.setName(editAreaDTO.getName());
+
+            if (editAreaDTO.getImages() != null) {
+                area.getImages().clear();
+                List<Image> newImages = editAreaDTO.getImages().stream()
+                        .map(this::decodeImage)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                area.getImages().addAll(newImages);
+            }
+
+            if (editAreaDTO.getFlowers() != null) {
+                Set<Flower> newFlowers = processFlowers(editAreaDTO.getFlowers());
+                area.setFlowers(newFlowers);
+            }
+
+            area.setDescription(editAreaDTO.getDescription());
+            area.setEndDate(editAreaDTO.getEndDate());
+            area.setPricePerDay(editAreaDTO.getPricePerDay());
+            area.setMaxHives(editAreaDTO.getMaxHives());
+            area.setAvailabilityStatus(editAreaDTO.getAvailabilityStatus());
+
+            areaRepository.save(area);
+        });
+    }
+
+    public List<AreaDTO> getAllAreas() {
+        List<Area> areas = areaRepository.findAll();
+        return areas.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     public List<AreaDTO> getOwnedAreas() {
@@ -58,64 +176,58 @@ public class AreaService {
                 .collect(Collectors.toList());
     }
 
-    public List<AreaDTO> getRentedAreas() {
-        return personService.getProfile().getRentedAreas()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
 
-    public List<AreaDTO> getAllAreas() {
-        List<Area> areas = areaRepository.findAll();
-        return areas.stream().map(this::mapToDTO).collect(Collectors.toList());
-    }
-
-    public void editArea(EditAreaDTO editAreaDTO) {
-        Optional<Area> toEdit = areaRepository.findById(editAreaDTO.getId());
-
-        toEdit.ifPresent(area -> {
-            area.setName(editAreaDTO.getName());
-            area.setImgBase64(editAreaDTO.getImgBase64());
-            area.setType(editAreaDTO.getType());
-            area.setDescription(editAreaDTO.getDescription());
-            area.setEndDate(editAreaDTO.getEndDate());
-            area.setPricePerDay(editAreaDTO.getPricePerDay());
-            area.setMaxHives(editAreaDTO.getMaxHives());
-            area.setAvailabilityStatus(editAreaDTO.getAvailabilityStatus());
-            areaRepository.save(area);
-        });
-    }
-
+    @Transactional
     public void deleteArea(Long id) {
         Optional<Area> toDelete = areaRepository.findById(id);
         toDelete.ifPresent(areaRepository::delete);
     }
 
-
-
-
     private AreaDTO mapToDTO(Area area) {
-        List<List<Double>> coords = area.getCoordinates().stream()
-                .map(s -> {
-                    String[] parts = s.split(",");
-                    return List.of(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
-                })
+        List<List<Double>> coords = convertPolygonToDto(area.getPolygon());
+
+        List<String> images = area.getImages().stream()
+                .map(img -> img.getFileContent() != null ? Base64.getEncoder().encodeToString(img.getFileContent()) : null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return new AreaDTO(
-                area.getId(),
-                area.getType(),
-                coords,
-                area.getArea(),
-                area.getDescription(),
-                area.getMaxHives(),
-                area.getPricePerDay(),
-                area.getAvailabilityStatus(),
-                area.getOwner().getFirstname() != null ? area.getOwner().getFirstname() : null,
-                area.getOwner().getLastname() != null ? area.getOwner().getLastname() : null,
-                area.getAvailableFrom(),
-                area.getImgBase64(),
-                area.getName()
-        );
+        Set<FlowerDTO> flowerDTOs = area.getFlowers().stream()
+                .map(f -> FlowerDTO.builder()
+                        .id(f.getId())
+                        .name(f.getName())
+                        .color(f.getColor())
+                        .build())
+                .collect(Collectors.toSet());
+
+        return AreaDTO.builder()
+                .id(area.getId())
+                .flowers(flowerDTOs)
+                .images(images)
+                .coordinates(coords)
+                .area(area.getArea())
+                .description(area.getDescription())
+                .maxHives(area.getMaxHives())
+                .pricePerDay(area.getPricePerDay())
+                .status(AvailabilityStatus.valueOf(area.getAvailabilityStatus().toString()))
+                .ownerFirstName(area.getOwner().getFirstname())
+                .ownerLastName(area.getOwner().getLastname())
+                .availableFrom(area.getAvailableFrom())
+                .endDate(area.getEndDate())
+                .name(area.getName())
+                .averageRating(area.getAverageRating() != null ? area.getAverageRating() : BigDecimal.ZERO)
+                .reviewCount(area.getReviewCount() != null ? area.getReviewCount() : 0)
+                .build();
+    }
+
+    private Image decodeImage(String base64Image) {
+        if (base64Image == null || base64Image.isEmpty()) {
+            return null;
+        }
+        String cleanedBase64 = base64Image;
+        if (base64Image.contains(",")) {
+            cleanedBase64 = base64Image.split(",")[1];
+        }
+        byte[] decodedBytes = Base64.getDecoder().decode(cleanedBase64);
+        return Image.builder().fileContent(decodedBytes).build();
     }
 }

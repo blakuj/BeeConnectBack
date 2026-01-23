@@ -1,0 +1,27 @@
+package com.beconnect.beeconnect_backend.DTO;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProductReviewDTO {
+    private Long id;
+    private Integer rating;
+    private String comment;
+    private LocalDateTime createdAt;
+
+    private Long reviewerId;
+    private String reviewerFirstname;
+    private String reviewerLastname;
+
+    private Long productId;
+    private String productName;
+
+    private Long orderId;
+}

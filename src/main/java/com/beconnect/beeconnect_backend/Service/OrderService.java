@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,67 +43,57 @@ public class OrderService {
     public OrderDTO createOrder(CreateOrderDTO dto) {
         Person buyer = personService.getProfile();
 
-        // Walidacja
         if (dto.getQuantity() == null || dto.getQuantity() <= 0) {
             throw new RuntimeException("Quantity must be greater than 0");
         }
 
-        // Pobierz produkt
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Sprawdź dostępność
         if (!product.getAvailable()) {
             throw new RuntimeException("Product is not available");
         }
 
-        // Sprawdź stock
         if (product.getStock() < dto.getQuantity()) {
             throw new RuntimeException("Insufficient stock. Available: " + product.getStock());
         }
 
-        // Sprawdź czy użytkownik nie kupuje własnego produktu
         if (product.getSeller().getId().equals(buyer.getId())) {
             throw new RuntimeException("You cannot buy your own product");
         }
 
-        // Oblicz cenę
-        double totalPrice = product.getPrice() * dto.getQuantity();
-        System.out.println(totalPrice);
-        System.out.println(dto.getQuantity());
-        // Sprawdź saldo kupującego
-        if (buyer.getBalance() < totalPrice) {
+        BigDecimal quantity = BigDecimal.valueOf(dto.getQuantity());
+        BigDecimal pricePerUnit = product.getPrice();
+        BigDecimal totalPrice = pricePerUnit.multiply(quantity);
+
+        if (buyer.getBalance().compareTo(totalPrice) < 0) {
             throw new RuntimeException("Insufficient balance. Required: " + totalPrice + " PLN, Available: " + buyer.getBalance() + " PLN");
         }
 
-        // Pobierz środki od kupującego
-        buyer.setBalance((float) (buyer.getBalance() - totalPrice));
+        // POBIERZ ŚRODKI OD KUPUJĄCEGO
+        buyer.setBalance(buyer.getBalance().subtract(totalPrice));
         personRepository.save(buyer);
 
-        // Dodaj środki sprzedawcy
+        // DODAJ ŚRODKI SPRZEDAWCY
         Person seller = product.getSeller();
-        seller.setBalance((float) (seller.getBalance() + totalPrice));
+        seller.setBalance(seller.getBalance().add(totalPrice));
         personRepository.save(seller);
 
-        // Zmniejsz stock produktu
         product.setStock(product.getStock() - dto.getQuantity());
 
-        // Jeśli stock = 0, ustaw available na false
         if (product.getStock() == 0) {
             product.setAvailable(false);
         }
 
         productRepository.save(product);
 
-        // Utwórz zamówienie
         Order order = Order.builder()
                 .buyer(buyer)
-                .seller(seller)
                 .product(product)
                 .quantity(dto.getQuantity())
-                .pricePerUnit(product.getPrice())
+                .pricePerUnit(pricePerUnit)
                 .totalPrice(totalPrice)
-                .status(OrderStatus.COMPLETED)
+                .status(OrderStatus.CONFIRMED)
                 .deliveryAddress(dto.getDeliveryAddress())
                 .buyerNotes(dto.getBuyerNotes())
                 .build();
@@ -109,13 +101,45 @@ public class OrderService {
         order = orderRepository.save(order);
 
         Person currentUser = personService.getProfile();
-
         notificationService.notifyNewOrder(
                 product.getSeller().getId(),
                 product.getName(),
                 currentUser.getFirstname() + " " + currentUser.getLastname(),
                 order.getId()
         );
+
+        return mapToDTO(order);
+    }
+
+    /**
+     * Zaktualizuj status zamówienia (dla Sprzedawcy)
+     */
+    @Transactional
+    public OrderDTO updateOrderStatus(Long orderId, String statusString) {
+        Person currentUser = personService.getProfile();
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getProduct().getSeller().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You don't have permission to update this order");
+        }
+
+        try {
+            OrderStatus newStatus = OrderStatus.valueOf(statusString.toUpperCase());
+            order.setStatus(newStatus);
+
+            notificationService.notifyOrderStatusChange(
+                    order.getBuyer().getId(),
+                    order.getProduct().getName(),
+                    newStatus.name(),
+                    order.getId()
+            );
+
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status");
+        }
+
+        order = orderRepository.save(order);
         return mapToDTO(order);
     }
 
@@ -135,6 +159,7 @@ public class OrderService {
      */
     public List<OrderDTO> getMySales() {
         Person seller = personService.getProfile();
+
         List<Order> orders = orderRepository.findRecentOrdersBySeller(seller);
         return orders.stream()
                 .map(this::mapToDTO)
@@ -150,9 +175,8 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // Sprawdź uprawnienia (tylko kupujący lub sprzedający mogą zobaczyć zamówienie)
         boolean isBuyer = order.getBuyer().getId().equals(currentUser.getId());
-        boolean isSeller = order.getSeller().getId().equals(currentUser.getId());
+        boolean isSeller = order.getProduct().getSeller().getId().equals(currentUser.getId());
 
         if (!isBuyer && !isSeller) {
             throw new RuntimeException("You don't have permission to view this order");
@@ -173,7 +197,6 @@ public class OrderService {
         List<Order> allOrders = new java.util.ArrayList<>(purchases);
         allOrders.addAll(sales);
 
-        // Sortuj po dacie zamówienia (najnowsze pierwsze)
         allOrders.sort((o1, o2) -> o2.getOrderedAt().compareTo(o1.getOrderedAt()));
 
         return allOrders.stream()
@@ -185,23 +208,33 @@ public class OrderService {
      * Mapowanie Order → OrderDTO
      */
     private OrderDTO mapToDTO(Order order) {
+        String productImage = null;
+        if (order.getProduct().getImages() != null && !order.getProduct().getImages().isEmpty()) {
+            byte[] imgBytes = order.getProduct().getImages().get(0).getFileContent();
+            if (imgBytes != null) {
+                productImage = Base64.getEncoder().encodeToString(imgBytes);
+            }
+        }
+
+        Person seller = order.getProduct().getSeller();
+
         return OrderDTO.builder()
                 .id(order.getId())
                 .buyerId(order.getBuyer().getId())
                 .buyerFirstname(order.getBuyer().getFirstname())
                 .buyerLastname(order.getBuyer().getLastname())
                 .buyerEmail(order.getBuyer().getEmail())
-                .sellerId(order.getSeller().getId())
-                .sellerFirstname(order.getSeller().getFirstname())
-                .sellerLastname(order.getSeller().getLastname())
-                .sellerEmail(order.getSeller().getEmail())
+                .sellerId(seller.getId())
+                .sellerFirstname(seller.getFirstname())
+                .sellerLastname(seller.getLastname())
+                .sellerEmail(seller.getEmail())
                 .productId(order.getProduct().getId())
                 .productName(order.getProduct().getName())
                 .productCategory(order.getProduct().getCategory().toString())
-                .productImage(order.getProduct().getImageBase64())
+                .productImage(productImage)
                 .quantity(order.getQuantity())
-                .pricePerUnit(order.getPricePerUnit())
-                .totalPrice(order.getTotalPrice())
+                .pricePerUnit(order.getPricePerUnit().doubleValue())
+                .totalPrice(order.getTotalPrice().doubleValue())
                 .status(order.getStatus())
                 .orderedAt(order.getOrderedAt())
                 .deliveredAt(order.getDeliveredAt())

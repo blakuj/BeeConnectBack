@@ -1,7 +1,7 @@
 package com.beconnect.beeconnect_backend.Model;
 
-
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "conversation")
+@Table(name = "conversations")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,39 +21,27 @@ public class Conversation {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "participant1_id", nullable = false)
-    private Person participant1;
+    @JoinColumn(name = "buyer_id", nullable = false)
+    @NotNull
+    private Person buyer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "participant2_id", nullable = false)
-    private Person participant2;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column
-    private LocalDateTime lastMessageAt;
-
-    @Column(columnDefinition = "TEXT")
-    private String lastMessageContent;
+    @JoinColumn(name = "product_id", nullable = false)
+    @NotNull
+    private Product product;
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Message> messages = new ArrayList<>();
 
+    @Column(nullable = false)
+    private LocalDateTime startedAt;
+
+    private LocalDateTime lastMessageAt;
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        startedAt = LocalDateTime.now();
         lastMessageAt = LocalDateTime.now();
     }
 
-    // Pomocnicza metoda do sprawdzania czy użytkownik jest uczestnikiem
-    public boolean isParticipant(Person person) {
-        return participant1.getId().equals(person.getId()) ||
-                participant2.getId().equals(person.getId());
-    }
-
-    // Pomocnicza metoda do pobierania drugiego uczestnika
-    public Person getOtherParticipant(Person currentUser) {
-        return participant1.getId().equals(currentUser.getId()) ? participant2 : participant1;
-    }
 }

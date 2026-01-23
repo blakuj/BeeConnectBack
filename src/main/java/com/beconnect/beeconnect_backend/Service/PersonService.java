@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,7 +71,7 @@ public class PersonService {
 
     public void addFunds(Long amount){
         Person person = getProfile();
-        person.setBalance(person.getBalance() + amount);
+        person.setBalance(person.getBalance().add(BigDecimal.valueOf(amount)));
         personRepository.save(person);
     }
 

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Service
@@ -36,7 +37,7 @@ public class AuthService {
                 .phone(request.getPhone())
                 .email(request.getEmail())
                 .login(request.getEmail())
-                .balance(0.0f)
+                .balance(BigDecimal.ZERO)
                 .role(Role.USER)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();

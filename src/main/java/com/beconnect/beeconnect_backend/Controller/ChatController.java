@@ -2,6 +2,7 @@ package com.beconnect.beeconnect_backend.Controller;
 
 import com.beconnect.beeconnect_backend.DTO.*;
 import com.beconnect.beeconnect_backend.Service.ChatService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,7 +67,7 @@ public class ChatController {
      * Wyślij wiadomość
      */
     @PostMapping("/messages")
-    public ResponseEntity<?> sendMessage(@RequestBody CreateMessageDTO dto) {
+    public ResponseEntity<?> sendMessage(@Valid @RequestBody CreateMessageDTO dto) {
         try {
             MessageDTO message = chatService.sendMessage(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(message);
@@ -81,7 +82,7 @@ public class ChatController {
      * Rozpocznij nową konwersację
      */
     @PostMapping("/conversations")
-    public ResponseEntity<?> startConversation(@RequestBody StartConversationDTO dto) {
+    public ResponseEntity<?> startConversation(@Valid @RequestBody StartConversationDTO dto) {
         try {
             ConversationDTO conversation = chatService.startConversation(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(conversation);
